@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>糯米驱邪有限公司</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* 港产僵尸片的夜：青黑夜色、符纸黄、朱砂红、糯米白、尸青。
+     版式：一屏的手机 App。上栏是章节、地点和两项数值，中间是点一下出一句的对话流，下栏是操作。 */
+  --night: #0d2a2e;
+  --night-2: #13383d;
+  --night-3: #1b474d;
+  --rice: #f1ecdf;
+  --rice-dim: #a9bcb7;
+  --fu: #e8bf3a;
+  --zhusha: #c4321c;
+  --shiqing: #93b29c;
+  --paper: #efe3c4;
+  --ink: #2b1a0e;
+  --font-brush: "Ma Shan Zheng", "Kaiti SC", "STKaiti", "KaiTi", serif;
+  --font-body: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --font-ui: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --bgA: #0d2a2e;
+  --bgB: #18414a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--night); color: var(--rice); font-family: var(--font-body); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--fu); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- app shell */
+#app { height: 100%; max-width: 560px; margin: 0 auto; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--bgA); position: relative; overflow: hidden; }
+#app[data-bg="home"]   { --bgA: #102528; --bgB: #22403b; }
+#app[data-bg="flash"]  { --bgA: #221f16; --bgB: #3b3322; }
+#app[data-bg="mount"]  { --bgA: #0a2124; --bgB: #173b3a; }
+#app[data-bg="hosp"]   { --bgA: #0f262c; --bgB: #244a52; }
+#app[data-bg="garage"] { --bgA: #172225; --bgB: #2b3a3a; }
+#app[data-bg="office"] { --bgA: #13272a; --bgB: #253f3c; }
+#app[data-bg="dawn"]   { --bgA: #122437; --bgB: #34405a; }
+#app[data-bg="tomb"]   { --bgA: #081b18; --bgB: #123229; }
+#app[data-bg="gold"]   { --bgA: #17140a; --bgB: #4a3a12; }
+#app[data-bg="police"] { --bgA: #0d1f31; --bgB: #1d3a58; }
+#app[data-bg="store"]  { --bgA: #132826; --bgB: #2c4a41; }
+
+.top { position: relative; z-index: 2; display: grid; gap: 6px; padding: 10px 16px 0; background: var(--night); border-bottom: 1px solid rgba(241,236,223,.1); }
+.row1 { display: flex; align-items: center; gap: 10px; }
+.chap { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.chap span { font-family: var(--font-ui); font-size: 12px; color: var(--fu); white-space: nowrap; }
+.chap b { font-family: var(--font-brush); font-weight: 400; font-size: 22px; white-space: nowrap; }
+.place { margin-left: auto; display: grid; text-align: right; font-family: var(--font-ui); font-size: 12px; line-height: 1.35; color: var(--rice-dim); }
+.place #place { color: var(--rice); font-weight: 600; }
+.icon { flex: none; background: transparent; border: 1px solid rgba(241,236,223,.25); border-radius: 8px; padding: 6px 10px; font-family: var(--font-ui); font-size: 13px; }
+.hud { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; min-height: 22px; padding-bottom: 9px; font-family: var(--font-ui); font-size: 12px; }
+.stat { position: relative; display: flex; align-items: center; gap: 6px; }
+.stat[hidden] { display: none; }
+.stat .lbl { color: var(--rice-dim); }
+.bar { width: 72px; height: 6px; border-radius: 3px; background: rgba(241,236,223,.15); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 100%; background: var(--rice); transition: width .6s; }
+.stat.low .bar i { background: var(--zhusha); }
+.stat b { font-weight: 600; font-variant-numeric: tabular-nums; }
+#hbNum { color: #ff9b85; }
+#hbNum.ok { color: var(--shiqing); }
+.delta { position: absolute; left: 0; top: 100%; margin-top: 2px; white-space: nowrap; font-weight: 600; color: #ff9b85; pointer-events: none; animation: rise 1.7s ease-out forwards; z-index: 3; }
+.delta.up { color: var(--shiqing); }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-12px); } }
+.prog { position: absolute; left: -16px; right: -16px; bottom: -1px; height: 2px; }
+.prog i { display: block; height: 100%; width: 0; background: var(--fu); transition: width .3s; }
+
+.feed { min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 12px; padding: 20px 16px 48px; background: radial-gradient(140% 60% at 50% 0%, var(--bgB), var(--bgA) 70%); cursor: pointer; }
+#app.flash .feed { filter: sepia(.35); }
+.feed > * { flex: none; animation: in .28s ease-out; }
+@keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.ctrl { display: flex; align-items: stretch; gap: 8px; padding: 10px 16px 12px; background: var(--night); border-top: 1px solid rgba(241,236,223,.1); }
+.primary, .act-btn { background: var(--zhusha); color: #fff6ea; border: 0; border-radius: 10px; padding: 12px 18px; font-family: var(--font-ui); font-weight: 600; font-size: 15px; }
+.primary.xl { font-size: 17px; padding: 14px 18px; }
+.ghost { background: transparent; color: var(--rice); border: 1px solid rgba(241,236,223,.3); border-radius: 10px; padding: 11px 14px; font-family: var(--font-ui); font-size: 14px; }
+.ghost[aria-pressed="true"] { background: var(--fu); color: var(--ink); border-color: var(--fu); }
+.link { background: none; border: 0; padding: 6px; color: var(--fu); font-family: var(--font-ui); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; }
+#nextBtn { flex: 1; display: grid; gap: 1px; line-height: 1.25; }
+#nextBtn small { font-weight: 400; font-size: 11px; opacity: .8; }
+#nextBtn:disabled { background: var(--night-3); color: var(--rice-dim); }
+.act-btn:disabled { background: #46595a; color: #cfd8d4; }
+
+/* ---------- story lines */
+.nar { margin: 0; max-width: 32em; font-size: 17px; line-height: 1.85; text-wrap: pretty; }
+.say { display: flex; align-items: flex-start; gap: 9px; }
+.say.r { flex-direction: row-reverse; }
+.say.cont { margin-top: -6px; }
+.badge { flex: none; width: 34px; height: 34px; border-radius: 7px; display: grid; place-items: center; font-family: var(--font-brush); font-size: 19px; color: var(--night); background: var(--rice-dim); }
+.say.cont .badge { visibility: hidden; height: 0; }
+.sb { display: grid; gap: 3px; justify-items: start; max-width: min(78%, 26em); }
+.say.r .sb { justify-items: end; }
+.who { font-family: var(--font-ui); font-size: 12px; color: var(--rice-dim); }
+.bub { background: var(--night-3); padding: 9px 13px; border-radius: 4px 14px 14px 14px; font-size: 16.5px; line-height: 1.7; word-break: break-word; }
+.say.r .bub { background: var(--rice); color: #13282b; border-radius: 14px 4px 14px 14px; }
+.s-me .badge, .s-trio .badge { background: var(--rice); }
+.s-pang .badge { background: #f0a37a; } .s-pang .who { color: #f0a37a; }
+.s-dao .badge { background: var(--fu); } .s-dao .who { color: var(--fu); }
+.s-zom .badge { background: var(--shiqing); } .s-zom .who { color: var(--shiqing); }
+.s-zom .bub { background: #23413a; color: #e3f0e6; border: 1px solid rgba(147,178,156,.45); font-size: 18px; letter-spacing: .14em; }
+.s-tie .badge { background: #8fbfe0; } .s-tie .who { color: #8fbfe0; }
+.s-doc .badge { background: #d6dee0; }
+.s-sun .badge { background: #c8b4f0; } .s-sun .who { color: #c8b4f0; }
+.s-zhou .badge { background: #b9c4be; }
+.s-girl .badge { background: #f5b9c6; } .s-girl .who { color: #f5b9c6; }
+.s-liu .badge { background: #f59bbd; } .s-liu .who { color: #f59bbd; }
+.s-wai .badge { background: #f7b267; } .s-wai .who { color: #f7b267; }
+.s-zhao .badge, .s-jing .badge { background: #7fb6ee; } .s-zhao .who, .s-jing .who { color: #7fb6ee; }
+.s-clerk .badge { background: #a8d8b0; }
+.s-exp .badge { background: #d2bfae; }
+.s-shifu .badge { background: #d9c79c; } .s-shifu .who { color: #d9c79c; }
+.s-biao .badge { background: #e3a6d6; } .s-biao .who { color: #e3a6d6; }
+.s-unk .badge { background: rgba(241,236,223,.25); color: var(--rice); }
+
+.sys { align-self: center; max-width: 92%; text-align: center; font-family: var(--font-ui); font-size: 13.5px; line-height: 1.55; background: rgba(241,236,223,.08); border: 1px solid rgba(241,236,223,.14); padding: 6px 14px; border-radius: 16px; }
+.sys b { margin-right: 6px; color: var(--fu); font-weight: 600; }
+.sys.warn { background: rgba(196,50,28,.16); border-color: rgba(255,120,95,.5); color: #ffb3a3; }
+.sys.warn b { color: #ff8a73; }
+.dan { align-self: flex-end; font-family: var(--font-ui); font-size: 14px; color: #fff; background: rgba(0,0,0,.32); border: 1px solid rgba(255,255,255,.12); padding: 4px 12px; border-radius: 14px; }
+.feed > .dan { animation: dan .5s ease-out; }
+@keyframes dan { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: none; } }
+.led { padding: 10px 16px 10px 18px; background: var(--paper); color: var(--ink); font-family: var(--font-brush); font-size: 19px; line-height: 1.8; border-left: 4px solid var(--zhusha); background-image: repeating-linear-gradient(to bottom, transparent 0 33px, rgba(196,50,28,.22) 33px 34px); box-shadow: inset 0 0 26px rgba(120,80,30,.25), 0 2px 0 rgba(0,0,0,.25); }
+.led + .led { margin-top: -8px; }
+.led.simp { font-family: var(--font-body); font-size: 17px; border-left-color: var(--fu); transform: rotate(-1.2deg); }
+.paper { padding: 10px 14px; background: #d9d7cf; color: #2a2a28; font-size: 15px; line-height: 1.8; letter-spacing: .05em; border: 1px dashed #8d8b80; box-shadow: 0 2px 0 rgba(0,0,0,.2); }
+.stone { align-self: center; max-width: 100%; padding: 14px 18px 14px 24px; text-align: center; font-family: var(--font-brush); font-size: 26px; letter-spacing: .25em; color: #d3d8d2; background: #3b4744; border-radius: 3px; box-shadow: inset 0 0 0 2px #2a3331, inset 0 0 22px rgba(0,0,0,.65); text-shadow: 0 -1px 0 rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.18); }
+.bigrow { align-self: center; max-width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; padding: 10px 0; }
+.big { font-family: var(--font-brush); font-size: clamp(36px, 12.5vw, 60px); line-height: 1; color: var(--zhusha); animation: stampIn .32s cubic-bezier(.2,1.6,.4,1); }
+.big .dot { font-style: normal; font-size: .45em; }
+@keyframes stampIn { from { opacity: 0; transform: scale(1.8) rotate(-8deg); } to { opacity: 1; transform: none; } }
+.cmt1 { align-self: flex-start; display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; font-family: var(--font-ui); font-size: 14px; background: rgba(241,236,223,.08); border-radius: 18px; }
+.cmt1 .av { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: rgba(241,236,223,.2); }
+
+.actcard { align-self: center; position: relative; display: grid; justify-items: center; width: min(300px, 88%); margin: 14px 0 6px; padding: 16px 12px 18px; background: var(--fu); color: var(--zhusha); outline: 2px solid var(--zhusha); outline-offset: -7px; box-shadow: 0 12px 28px rgba(0,0,0,.4); }
+.act-no { font-family: var(--font-ui); font-size: 12px; color: #6b4a10; }
+.act-name { font-family: var(--font-brush); font-size: 46px; line-height: 1.15; }
+.act-seal { position: absolute; right: 14px; bottom: 12px; width: 26px; height: 26px; display: grid; place-items: center; background: var(--zhusha); color: var(--fu); font-family: var(--font-brush); font-size: 16px; transform: rotate(-8deg); }
+
+/* ---------- choices and gates */
+.choice { display: grid; gap: 8px; padding: 12px; border: 1px dashed rgba(232,191,58,.7); border-radius: 10px; background: rgba(232,191,58,.06); cursor: default; }
+.choice .q { margin: 0 0 2px; font-family: var(--font-ui); font-size: 13px; color: var(--fu); }
+.opt { text-align: left; padding: 11px 14px; font-family: var(--font-body); font-size: 16px; background: var(--night-3); border: 1px solid rgba(232,191,58,.35); border-radius: 8px; }
+.opt:hover:not(:disabled) { border-color: var(--fu); }
+.opt.on { background: var(--fu); color: var(--ink); border-color: var(--fu); }
+.opt:disabled:not(.on) { opacity: .45; }
+.card { align-self: center; width: 100%; max-width: 360px; cursor: default; }
+.gate:not(.phone) { display: grid; justify-items: center; gap: 10px; padding: 14px; text-align: center; background: var(--night-2); border: 1px dashed rgba(232,191,58,.7); border-radius: 12px; }
+.gate-title { margin: 0; font-family: var(--font-ui); font-size: 13.5px; color: var(--fu); }
+.gate-tip { margin: 0; min-height: 1.3em; font-family: var(--font-ui); font-size: 12.5px; color: var(--rice-dim); }
+.phone .gate-tip { padding: 0 12px 10px; color: #7a817e; }
+.nudge { animation: nudge .5s; }
+@keyframes nudge { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+/* ---------- phone-style cards */
+.phone { overflow: hidden; background: #f7f6f2; color: #1e2321; font-family: var(--font-ui); font-size: 14px; border-radius: 14px; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.ph-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; font-size: 12.5px; color: #59625f; border-bottom: 1px solid #e7e4db; }
+.ph-head .ago { margin-left: auto; color: #8a918e; }
+.app-ic { flex: none; width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--ict, #fff); background: var(--ic, #2f7cf6); }
+.ph-body { display: grid; gap: 4px; padding: 10px 12px 12px; }
+.ph-body p { margin: 0; line-height: 1.55; }
+.sub { font-size: 12px; color: #7a817e; }
+.notify .ph-body b { font-size: 14.5px; }
+.listing { display: flex; gap: 10px; }
+.thumb { flex: none; width: 64px; height: 64px; border-radius: 8px; display: grid; place-items: center; font-family: var(--font-brush); font-size: 30px; color: #8a5a00; background: #efe0b0; }
+.lt { font-weight: 600; }
+.price { color: #d93d42; font-weight: 700; }
+.shop { list-style: none; margin: 0; padding: 8px 12px 12px; display: grid; gap: 8px; }
+.shop li { display: flex; align-items: center; gap: 10px; }
+.shop b { margin-left: auto; color: #d93d42; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sk { flex: none; width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; font-weight: 700; color: #59625f; background: #ece9df; }
+.sk.g { background: #dfeee5; color: #2e6b4b; }
+.live { display: grid; gap: 8px; padding: 12px 14px; color: #fff; font-family: var(--font-ui); background: linear-gradient(160deg, #2a1416, #120b0c); border-radius: 14px; box-shadow: 0 10px 28px rgba(0,0,0,.4); }
+.lv-top { display: flex; justify-content: space-between; font-size: 12px; color: #f3c4c4; }
+.lv-dot { padding: 2px 8px; border-radius: 10px; font-weight: 700; color: #fff; background: #e5484d; }
+.lv-title { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.5; }
+.lv-host { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #e6caca; }
+.badge-s { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-family: var(--font-brush); color: var(--night); background: #8fbfe0; }
+.lic { position: relative; padding: 14px 16px 16px; color: var(--ink); background: #f3ead2; border: 2px solid #b8893a; border-radius: 6px; font-family: var(--font-body); }
+.lic-h { text-align: center; font-family: var(--font-brush); font-size: 26px; letter-spacing: .2em; color: #8a1f12; }
+.lic-h small { display: block; letter-spacing: 0; font-family: var(--font-ui); font-size: 11px; color: #8a6a3a; }
+.lic dl, .kv, .poster dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 10px 0 0; }
+.lic dt { font-size: 13px; color: #8a6a3a; }
+.lic dd { margin: 0; font-size: 15px; padding-right: 40px; }
+.lic-seal { position: absolute; right: 14px; bottom: 12px; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-brush); font-size: 22px; color: var(--zhusha); border: 2px solid var(--zhusha); transform: rotate(-12deg); opacity: .85; }
+.qrwrap { display: flex; align-items: center; gap: 12px; }
+.qr { flex: none; width: 96px; height: 96px; image-rendering: pixelated; }
+.kv { margin: 0; }
+.kv dt { font-size: 12px; color: #7a817e; }
+.kv dd { margin: 0; font-size: 13.5px; font-weight: 600; }
+.kv dd small { display: block; font-size: 11.5px; font-weight: 400; color: #7a817e; }
+.bill { padding: 16px; text-align: center; color: #f3e3b0; background: #0f3b2e; border: 3px solid #c9a646; border-radius: 4px; box-shadow: 0 10px 28px rgba(0,0,0,.4); }
+.bill-brand { font-family: var(--font-brush); font-size: 34px; letter-spacing: .15em; color: #e9c86a; }
+.bill p { margin: 6px 0 0; font-size: 16px; letter-spacing: .1em; }
+.incense { max-width: 200px; display: grid; justify-items: center; gap: 4px; padding: 10px 0; }
+.sticks { height: 120px; display: flex; align-items: flex-end; gap: 22px; }
+.sticks i { position: relative; width: 4px; height: var(--h); border-radius: 2px; background: linear-gradient(#8a4b2a, #5b3220); }
+.sticks i::before { content: ""; position: absolute; top: -4px; left: -2px; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(#ffd27a, #ff7a2a 55%, transparent 70%); }
+.censer { width: 120px; height: 26px; background: linear-gradient(#7a6a4a, #4a3f2a); border-radius: 0 0 40px 40px / 0 0 26px 26px; }
+.incense p { margin: 0; font-family: var(--font-brush); font-size: 22px; color: var(--fu); }
+.fu7 { display: flex; justify-content: center; gap: 6px; padding: 6px 0; }
+.fu7 span { width: 32px; height: 92px; display: grid; place-items: center; font-family: var(--font-brush); font-size: 24px; color: var(--zhusha); background: var(--fu); transform: rotate(var(--r)); box-shadow: 0 6px 14px rgba(0,0,0,.35); }
+.calc { overflow: hidden; padding: 12px 14px; font-family: var(--font-ui); background: #1b1f1e; border: 1px solid #333; border-radius: 12px; }
+.calc-l { margin: 0; font-size: 12px; color: #8d9a96; }
+.calc-n { margin: 4px 0; font-size: 28px; color: #e8f2ee; font-variant-numeric: tabular-nums; white-space: nowrap; -webkit-mask-image: linear-gradient(90deg, #000 75%, transparent); mask-image: linear-gradient(90deg, #000 75%, transparent); }
+.calc-e { margin: 0; font-size: 12px; color: #ff8a73; }
+.prof { display: flex; align-items: center; gap: 12px; padding: 14px 12px 10px; }
+.avatar { flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-brush); font-size: 24px; color: var(--night); background: var(--shiqing); }
+.avatar.s { width: 30px; height: 30px; font-size: 15px; color: #59625f; background: #d8d6cf; }
+.avatar.s.z { color: var(--night); background: var(--shiqing); }
+.prof b { font-size: 16px; }
+.latest { display: flex; align-items: center; gap: 8px; padding: 10px 12px 12px; font-size: 13.5px; border-top: 1px solid #e7e4db; }
+.latest b { margin-left: auto; color: #d93d42; white-space: nowrap; }
+.tag { flex: none; padding: 1px 6px; font-size: 11px; color: #fff; background: #e5484d; border-radius: 4px; }
+.vids { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.vt { display: grid; gap: 4px; }
+.vt span { aspect-ratio: 3 / 4; display: grid; place-items: center; font-family: var(--font-brush); font-size: 30px; color: var(--shiqing); background: linear-gradient(160deg, #2c4a43, #13282b); border-radius: 8px; }
+.vt p { margin: 0; font-family: var(--font-ui); font-size: 11.5px; line-height: 1.4; }
+.poster { position: relative; padding: 16px; color: var(--ink); background: var(--rice); border-radius: 4px; font-family: var(--font-body); box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+.po-h { min-height: 56px; margin: 0; padding-right: 64px; font-family: var(--font-brush); font-size: 26px; line-height: 1.3; color: #8a1f12; }
+.poster dt { font-size: 13px; color: #7a5a3a; }
+.poster dd { margin: 0; font-size: 14.5px; }
+.po-seal, .seal { display: grid; place-items: center; color: #fbe9d0; background: var(--zhusha); border-radius: 5px; box-shadow: inset 0 0 0 2px rgba(251,233,208,.85), inset 0 0 0 4px var(--zhusha); transform: rotate(-5deg); }
+.po-seal { position: absolute; right: 14px; top: 14px; width: 52px; height: 52px; }
+.po-seal span, .seal span { writing-mode: vertical-rl; height: 2.1em; display: flex; flex-wrap: wrap; align-content: center; font-family: var(--font-brush); font-size: 17px; line-height: 1; }
+.po-seal span { font-size: 20px; }
+.cmt { display: grid; gap: 8px; padding: 10px 12px; }
+.c-row { display: flex; gap: 8px; }
+.c-row b { font-size: 12.5px; color: #59625f; }
+.c-row p { margin: 2px 0 0; font-size: 14px; line-height: 1.5; }
+.c-row.reply { margin-left: 22px; padding: 8px; background: #efede6; border-radius: 8px; }
+.cert { position: relative; max-width: 380px; padding: 18px 18px 26px; color: #7d1a0e; background: var(--fu); font-family: var(--font-brush); font-size: 17px; line-height: 1.75; outline: 2px solid var(--zhusha); outline-offset: -7px; box-shadow: 0 14px 34px rgba(0,0,0,.45); }
+.cert p { margin: 0 0 4px; }
+.cert .ct-h { margin: 0 0 10px; text-align: center; font-size: 26px; letter-spacing: .15em; }
+.cert .ct-f { margin: 10px 0 0; font-size: 20px; letter-spacing: .1em; }
+.slot { position: absolute; right: 18px; bottom: 18px; width: 58px; height: 58px; display: grid; place-items: center; border: 2px dashed rgba(125,26,14,.5); }
+.slot span { opacity: 0; writing-mode: vertical-rl; height: 3.1em; font-size: 17px; line-height: 1; color: #fff2e0; }
+.slot.stamped { border: 0; background: var(--zhusha); box-shadow: inset 0 0 0 2px #fff2e0, inset 0 0 0 4px var(--zhusha); transform: rotate(-7deg); animation: sealIn .45s cubic-bezier(.2,1.5,.4,1); }
+.slot.stamped span { opacity: 1; }
+.endcard { display: grid; justify-items: center; gap: 10px; padding: 18px 16px; text-align: center; background: var(--night-2); border: 1px solid rgba(232,191,58,.45); border-radius: 14px; }
+.end-h { margin: 0; font-family: var(--font-brush); font-size: 44px; color: var(--fu); }
+.end-s { margin: 0; font-family: var(--font-ui); font-size: 13px; color: var(--rice-dim); }
+.end-b { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+
+/* gate widgets */
+.vid { display: flex; gap: 10px; padding: 10px 12px 0; }
+.vid-cover { flex: 1; aspect-ratio: 16 / 10; display: grid; place-items: center; border-radius: 10px; background: linear-gradient(160deg, #3b2a12, #1a120a); }
+.vid-cover span { text-align: center; font-family: var(--font-brush); font-size: 28px; line-height: 1.15; color: var(--fu); }
+.vid-side { display: grid; align-content: end; }
+.heart { display: grid; justify-items: center; gap: 2px; padding: 4px; background: none; border: 0; color: #59625f; font-family: var(--font-ui); }
+.h-ic { font-size: 30px; line-height: 1; color: #c9c6bd; transition: color .2s; }
+.heart.on .h-ic { color: #e5484d; }
+.heart.pop .h-ic { animation: pop .4s; }
+@keyframes pop { 50% { transform: scale(1.5); } }
+.h-n { font-size: 12px; font-variant-numeric: tabular-nums; }
+.vid-meta { padding: 8px 12px 6px; }
+.vid-meta b { font-size: 13px; }
+.vid-meta p { margin: 2px 0 0; font-size: 13.5px; }
+.form label { font-size: 12px; color: #7a817e; }
+.form input { padding: 10px 12px; font: inherit; font-size: 16px; color: #1e2321; background: #fff; border: 1.5px solid #d6d3c9; border-radius: 8px; }
+.form input.bad { border-color: #e5484d; background: #fff1ef; }
+.form .act-btn { margin-top: 8px; }
+.beats { display: flex; gap: 12px; }
+.beats i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--shiqing); }
+.beats i.on { background: var(--shiqing); }
+.dancebox .act-btn { width: 96px; height: 96px; padding: 0; border-radius: 50%; font-family: var(--font-brush); font-weight: 400; font-size: 34px; animation: beat .8s ease-in-out infinite; }
+.dancebox .act-btn:disabled { animation: none; }
+@keyframes beat { 50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(196,50,28,.25); } }
+.stars { display: flex; gap: 6px; }
+.stars button { padding: 2px; font-size: 30px; line-height: 1; color: #d6d3c9; background: none; border: 0; }
+.stars button.on { color: #f5b301; }
+.tiles { display: grid; grid-template-columns: repeat(3, 64px); gap: 6px; }
+.tile { width: 64px; height: 44px; background: #4b5753; border: 1px solid #2a3532; border-radius: 3px; }
+.tile.pat { background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgba(232,191,58,.35) 6px 8px); }
+.tile.step { background-color: #6a7a75; outline: 2px solid var(--fu); }
+.slotrow { display: flex; align-items: center; gap: 40px; padding: 4px 0; }
+.jade { width: 58px; height: 58px; border: 0; border-radius: 50%; font-family: var(--font-brush); font-size: 26px; color: #d9f2e2; background: radial-gradient(circle at 35% 30%, #5fae84, #1f5a3d 70%); box-shadow: 0 0 18px rgba(95,174,132,.5); transition: transform .7s cubic-bezier(.5,0,.2,1); }
+.hole { width: 64px; height: 64px; border-radius: 50%; border: 3px dashed #b08a3a; background: radial-gradient(#2b2416, #4a3c1f); transition: box-shadow .6s; }
+.slotbox.in .jade { transform: translateX(101px); }
+.slotbox.in .hole { box-shadow: 0 0 24px rgba(232,191,58,.6); }
+.praisebox { position: relative; }
+.plus1 { position: absolute; left: 50%; top: 34%; font-family: var(--font-ui); font-weight: 800; font-size: 26px; color: var(--fu); animation: rise 1.4s ease-out forwards; }
+.signbox .hand { list-style: none; width: 100%; margin: 0; padding: 0; display: grid; gap: 4px; font-family: var(--font-brush); font-size: 17px; }
+.signbox .hand li { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dashed rgba(241,236,223,.18); }
+.signrow { width: 100%; display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-brush); font-size: 17px; }
+.sig { display: inline-block; min-width: 2em; text-align: center; font-style: normal; font-size: 26px; color: var(--fu); border-bottom: 1px solid var(--rice-dim); }
+
+/* ---------- toasts */
+#toasts { position: fixed; z-index: 40; top: 96px; left: 50%; transform: translateX(-50%); width: min(400px, calc(100% - 32px)); display: grid; gap: 8px; pointer-events: none; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-family: var(--font-ui); font-size: 14px; background: rgba(9,30,33,.96); border: 1px solid rgba(232,191,58,.35); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.35); animation: tin .3s ease-out; transition: opacity .4s, transform .4s; }
+.toast.out { opacity: 0; transform: translateY(-6px); }
+@keyframes tin { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.toast .tk { font-size: 12px; color: var(--fu); }
+.seal { flex: none; width: 44px; height: 44px; }
+.toast.ach .seal { animation: sealIn .45s cubic-bezier(.2,1.5,.4,1); }
+@keyframes sealIn { from { opacity: 0; transform: scale(2.2) rotate(-18deg); } to { opacity: 1; transform: rotate(-5deg); } }
+.tt { display: grid; }
+.tt small { font-size: 11px; color: var(--fu); }
+.tt b { font-size: 15px; }
+
+/* ---------- menu sheet */
+.sheet { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(4,14,16,.6); }
+.sheet[hidden] { display: none; }
+.sheet-card { width: min(560px, 100%); max-height: 84%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: var(--night-2); border-top: 2px solid var(--fu); border-radius: 16px 16px 0 0; }
+.tabs { display: flex; gap: 4px; padding: 10px 12px 0; }
+.tabs button { flex: 1; padding: 10px 6px; font-family: var(--font-ui); font-size: 15px; color: var(--rice-dim); background: none; border: 0; border-bottom: 2px solid transparent; }
+.tabs button[aria-selected="true"] { color: var(--rice); border-color: var(--fu); }
+.tabpane { overflow-y: auto; padding: 14px 16px; }
+.tabpane[hidden] { display: none; }
+.sheet-foot { display: flex; gap: 8px; padding: 10px 16px 14px; border-top: 1px solid rgba(241,236,223,.1); }
+.sheet-foot button { flex: 1; }
+.count { margin: 0 0 10px; font-family: var(--font-ui); font-size: 13px; color: var(--rice-dim); }
+.chaps, .items { display: grid; gap: 8px; }
+.chaprow { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-align: left; background: var(--night-3); border: 1px solid rgba(241,236,223,.12); border-radius: 10px; }
+.chaprow b { font-family: var(--font-brush); font-weight: 400; font-size: 20px; }
+.chaprow span { font-family: var(--font-ui); font-size: 12px; color: var(--rice-dim); }
+.chaprow .st { margin-left: auto; }
+.chaprow:disabled { opacity: .45; cursor: default; }
+.irow { display: grid; gap: 2px; padding: 10px 12px; background: var(--night-3); border-radius: 10px; }
+.irow b { font-size: 15px; }
+.irow p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--rice-dim); }
+.wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 14px 10px; }
+.wcell { display: grid; justify-items: center; gap: 6px; text-align: center; }
+.wcell b { font-family: var(--font-ui); font-size: 13px; }
+.wcell p { margin: 0; font-family: var(--font-ui); font-size: 11.5px; line-height: 1.45; color: var(--rice-dim); }
+.seal.locked { color: var(--rice-dim); background: transparent; box-shadow: inset 0 0 0 1.5px rgba(241,236,223,.3); }
+
+/* ---------- title */
+.title { position: fixed; inset: 0; z-index: 20; overflow-y: auto; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 14px; padding: 24px 16px 28px; background: radial-gradient(80% 60% at 28% 40%, #1d4a4f 0%, var(--night) 70%); }
+.title[hidden] { display: none; }
+.issuer { margin: 0; text-align: center; font-family: var(--font-ui); font-size: 12px; color: var(--rice-dim); }
+.tmain { width: min(520px, 100%); display: flex; align-items: center; gap: 20px; }
+.tside { flex: 1; min-width: 0; display: grid; gap: 14px; }
+.fu-hang { flex: none; position: relative; padding-top: 20px; }
+.fu-hang::before { content: ""; position: absolute; top: 0; left: 50%; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: #6d5a3a; box-shadow: 0 0 0 3px #3a2f1f; }
+.fu-hang::after { content: ""; position: absolute; top: 8px; left: 50%; width: 1px; height: 14px; background: #6d5a3a; }
+.fu-big { width: clamp(104px, 28vw, 140px); height: clamp(300px, 50vh, 440px); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 16px 0; background-color: var(--fu); background-image: linear-gradient(90deg, rgba(0,0,0,.06), transparent 22%, transparent 78%, rgba(0,0,0,.07)), repeating-linear-gradient(0deg, rgba(120,80,0,.06) 0 2px, transparent 2px 5px); outline: 2px solid var(--zhusha); outline-offset: -8px; box-shadow: 0 18px 40px rgba(0,0,0,.45); transform-origin: 50% -20px; animation: sway 6s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg); } }
+.fu-top { writing-mode: vertical-rl; font-family: var(--font-brush); font-size: 16px; letter-spacing: .1em; color: var(--zhusha); }
+.fu-big h1 { margin: 0; writing-mode: vertical-rl; font-family: var(--font-brush); font-weight: 400; font-size: clamp(24px, 3.6vh, 38px); line-height: 1; letter-spacing: .08em; color: var(--zhusha); }
+.fu-seal { width: 40px; height: 40px; }
+.fu-seal span { font-size: 15px; }
+.tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.tags li { padding: 3px 9px; font-family: var(--font-ui); font-size: 12px; color: var(--fu); border: 1px solid rgba(232,191,58,.45); border-radius: 12px; }
+.epi { max-width: 22em; margin: 0; font-size: 15.5px; line-height: 1.8; }
+.tbtns { display: grid; gap: 10px; }
+.hint { max-width: 22em; margin: 0; font-family: var(--font-ui); font-size: 12px; line-height: 1.6; color: var(--rice-dim); }
+@media (max-width: 340px) { .tmain { flex-direction: column; } .tside { text-align: center; } .tags { justify-content: center; } }
+
+/* ---------- impacts */
+.shk1 { animation: shk1 .35s; }
+.shk2 { animation: shk2 .45s; }
+.shk3 { animation: shk3 .55s; }
+@keyframes shk1 { 25% { transform: translate(-2px, 1px); } 75% { transform: translate(2px, -1px); } }
+@keyframes shk2 { 20% { transform: translate(-5px, 2px); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, -1px); } }
+@keyframes shk3 { 15% { transform: translate(-9px, 3px) rotate(-.6deg); } 30% { transform: translate(8px, -3px) rotate(.6deg); } 45% { transform: translate(-7px, 2px); } 60% { transform: translate(6px, -2px); } 80% { transform: translate(-3px, 1px); } }
+
+@media (min-width: 480px) { .nar { font-size: 18px; } .bub { font-size: 17px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="app" data-bg="night">
+  <header class="top">
+    <div class="row1">
+      <div class="chap"><span id="chapNo">第一幕</span><b id="chapName">尸毒</b></div>
+      <div class="place"><span id="place">我家</span><span id="time">凌晨 02:17</span></div>
+      <button id="menuBtn" class="icon" type="button">菜单</button>
+    </div>
+    <div class="hud">
+      <div class="stat" id="stHp" hidden><span class="lbl">胖子血量</span><span class="bar"><i id="hpBar"></i></span><b id="hpNum">100</b></div>
+      <div class="stat" id="stHb" hidden><span class="lbl">道长花呗</span><b id="hbNum">0</b></div>
+      <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
+    </div>
+  </header>
+  <main id="feed" class="feed" role="log" aria-label="故事"></main>
+  <footer class="ctrl">
+    <button id="autoBtn" class="ghost" type="button" aria-pressed="false">自动</button>
+    <button id="skipBtn" class="ghost" type="button">快进</button>
+    <button id="nextBtn" class="primary" type="button">继续<small>点屏幕任意处也行</small></button>
+  </footer>
+</div>
+
+<section id="title" class="title" aria-label="标题">
+  <p class="issuer">青龙山传统民俗文化咨询有限公司（筹）出品</p>
+  <div class="tmain">
+    <div class="fu-hang">
+      <div class="fu-big">
+        <span class="fu-top">敕令</span>
+        <h1>糯米驱邪有限公司</h1>
+        <span class="seal fu-seal"><span>开张大吉</span></span>
+      </div>
+    </div>
+    <div class="tside">
+      <ul class="tags" id="tTags"></ul>
+      <p class="epi" id="tEpi">世界上最可怕的事情，不是发现朋友变成了僵尸，而是你已经把他当成僵尸处理了，结果发现他还活着。</p>
+      <div class="tbtns">
+        <button id="startBtn" class="primary xl" type="button">开始营业</button>
+        <button id="resumeBtn" class="ghost" type="button" hidden>继续营业</button>
+        <button id="wallBtn" class="link" type="button">成就墙</button>
+      </div>
+      <p class="hint">点一下出一句。遇到选项和小互动，要你亲自动手。进度只保存在这台设备的浏览器里。</p>
+    </div>
+  </div>
+</section>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-label="菜单">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="chap" aria-selected="true">章节</button>
+      <button type="button" role="tab" data-tab="items" aria-selected="false">道具</button>
+      <button type="button" role="tab" data-tab="ach" aria-selected="false">成就</button>
+    </div>
+    <div class="tabpane" id="pane-chap"></div>
+    <div class="tabpane" id="pane-items" hidden></div>
+    <div class="tabpane" id="pane-ach" hidden></div>
+    <div class="sheet-foot">
+      <button id="toTitle" class="ghost" type="button">回到标题</button>
+      <button id="closeSheet" class="primary" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<noscript><p style="padding:16px">这个故事需要开启 JavaScript 才能阅读。</p></noscript>
+
+<script>
+(() => {
+'use strict';
+const DATA = {"title":"糯米驱邪有限公司","tags":["现代都市","民俗怪谈","盗墓寻宝","黑色幽默","荒诞喜剧"],"epigraph":"世界上最可怕的事情，不是发现朋友变成了僵尸，而是你已经把他当成僵尸处理了，结果发现他还活着。","nodes":[{"t":"act","n":"第一幕","name":"尸毒"},{"t":"fx","w":"pre","scene":{"p":"我家","tm":"凌晨 02:17","bg":"home"}},{"t":"nar","x":"凌晨两点十七分。"},{"t":"nar","x":"我发现我的好兄弟王胖子有点不对劲。"},{"t":"nar","x":"他坐在我家沙发上，脸色发青，嘴唇发紫，双眼无神，浑身散发着一股腐烂的气息。"},{"t":"nar","x":"我一开灯，他就抬手挡住眼睛，喉咙里发出一阵含混的“嗬……嗬……”声。"},{"t":"nar","x":"他已经三天没正经吃过东西了。"},{"t":"nar","x":"他的指甲长得吓人。"},{"t":"nar","x":"最重要的是，他的脖子上有两个牙印。"},{"t":"nar","x":"事情要从三天前说起。"},{"t":"fx","w":"post","scene":{"p":"回忆","tm":"三天前","bg":"flash"}},{"t":"nar","x":"那天我们在城郊的青龙山上挖出了一口棺材。"},{"t":"nar","x":"严格来说，那不叫挖。"},{"t":"nar","x":"我开着一辆二手五菱宏光，王胖子拿着洛阳铲，还有一个自称茅山第三十八代传人的道士负责看风水。"},{"t":"fx","w":"post","item":"car"},{"t":"fx","w":"post","item":"chan"},{"t":"nar","x":"我们三人组成了一支民间考古队。"},{"t":"nar","x":"没有营业执照，没有考古资质，也没有任何考古知识。"},{"t":"nar","x":"但我们有一个共同的理想。"},{"t":"nar","x":"发财。"},{"t":"nar","x":"尤其是那位道士，他的理想格外迫切。"},{"t":"nar","x":"因为他欠了花呗一万八。"},{"t":"fx","w":"post","hb":-18000,"note":"道士欠了花呗"},{"t":"nar","x":"我们是在闲鱼上认识他的。"},{"t":"nar","x":"那天我在闲鱼上搜“风水”，排第一的就是他。商品标题写着：祖传风水，寻龙点穴，看宅看坟，线上线下均可，不准不要钱。"},{"t":"card","k":"xianyu"},{"t":"say","s":"me","x":"准吗？"},{"t":"say","s":"dao","x":"准不准不好说，但是便宜。"},{"t":"nar","x":"后来我才知道，他那一万八的花呗，一半是网购法器刷的，另一半，是买了一套网课，叫《二十一天速成寻龙点穴》。"},{"t":"nar","x":"他只学了二十天。"},{"t":"nar","x":"第二十一天的课，因为花呗逾期，被停了。"},{"t":"nar","x":"相比之下，我和胖子的理由就朴素多了。"},{"t":"nar","x":"我在一家文化传媒公司做新媒体运营，月薪七千，房租三千二，每天加班到晚上十一点。"},{"t":"nar","x":"我们老板姓赵，口头禅是：“先干着，等公司做大了，少不了你们的。”"},{"t":"nar","x":"我先干了三年。"},{"t":"nar","x":"公司没做大，我的胃病先做大了。"},{"t":"nar","x":"胖子是我发小，从穿开裆裤起就跟我混。他开了一家搬家公司，公司就他一个人，外加一辆电动三轮。"},{"t":"nar","x":"他的人生理想更朴素：吃一顿不看价格的海鲜自助。"},{"t":"nar","x":"所以，当道士在电话里神秘兮兮地说“青龙山有大墓”的时候，我们俩谁都没犹豫。"},{"t":"nar","x":"道士说，青龙山龙气最旺。"},{"t":"nar","x":"后来我才知道，是因为青龙山离市区最近，油费最省。"},{"t":"nar","x":"胖子的洛阳铲是拼多多上买的，九十九包邮，送一副劳保手套。"},{"t":"fx","w":"pre","scene":{"p":"青龙山 半山腰","tm":"三天前 22:00","bg":"mount"}},{"t":"fx","w":"pre","hp":100},{"t":"nar","x":"那天晚上十点，我们把车停在山脚下，扛着工具往山上爬。"},{"t":"nar","x":"道士走在最前面，双手捧着一个罗盘，嘴里念念有词。"},{"t":"nar","x":"走到半山腰一棵老槐树下，罗盘的指针突然疯狂地转了起来。"},{"t":"nar","x":"道士猛地停下脚步。"},{"t":"say","s":"dao","x":"就是这里！此地磁场紊乱，阴气汇聚，下面必有大墓！"},{"t":"nar","x":"我低头一看。"},{"t":"nar","x":"罗盘底下压着胖子的充电宝。"},{"t":"nar","x":"道士面不改色地把充电宝挪开。"},{"t":"nar","x":"指针还在转。"},{"t":"nar","x":"“你看，”他说，“拿开了还在转。说明不是充电宝的问题。”"},{"t":"nar","x":"后来我才知道，那个罗盘是他在夜市花十五块钱买的，本来就是坏的。"},{"t":"fx","w":"post","item":"compass"},{"t":"nar","x":"但无论如何，我们就在那棵老槐树下开工了。"},{"t":"nar","x":"开工之前，道士先在四周埋了几个捕兽夹。"},{"t":"nar","x":"“防野兽。”他说，“也防同行。”"},{"t":"nar","x":"胖子的洛阳铲，第一铲下去就断了。"},{"t":"fx","w":"post","item":"chan","v":2},{"t":"nar","x":"剩下的活，是我们用工兵铲和手干的。"},{"t":"nar","x":"所以严格来说，那天晚上我们干的事，不叫考古，也不叫盗墓。"},{"t":"nar","x":"叫刨。"},{"t":"nar","x":"我们刨了整整四个小时。胖子刨一会儿就喊饿，喊完了接着刨。"},{"t":"nar","x":"凌晨两点，我的工兵铲碰到了一块硬东西。"},{"t":"nar","x":"那天晚上，我们挖出了一口漆黑的棺材，棺材上贴着七张黄符。"},{"t":"nar","x":"道士当时面色凝重。"},{"t":"say","s":"dao","x":"此乃七星镇煞棺。"},{"t":"say","s":"me","x":"什么意思？"},{"t":"say","s":"dao","x":"意思就是，里面的东西很凶。"},{"t":"say","s":"me","x":"有多凶？"},{"t":"say","s":"dao","x":"非常凶。"},{"t":"say","s":"me","x":"值钱吗？"},{"t":"nar","x":"道士沉默了一下。"},{"t":"say","s":"dao","x":"这个得打开看看。"},{"t":"choice","id":"c_coffin","q":"要打开棺材吗？","o":[{"l":"打开","r":[{"t":"nar","x":"你很果断。"}]},{"l":"先问值不值钱","r":[{"t":"nar","x":"道士说，这个问题他刚才已经回答过了。"}]},{"l":"相信道士的专业判断","r":[{"t":"nar","x":"道士的专业判断是：打开。"}]}]},{"t":"nar","x":"棺材盖很沉，我们三个人用撬棍撬了二十分钟。"},{"t":"nar","x":"七张黄符被撬得七零八落。道士心疼地把它们一张张捡起来，夹进随身的笔记本里，说这符纸少说也有三百年了，回去能卖钱。"},{"t":"fx","w":"post","item":"fu7"},{"t":"nar","x":"我们打开棺材，里面躺着一具穿着清朝官服的男尸。"},{"t":"nar","x":"尸体保存得十分完整，脸上的皮肉甚至还有弹性。"},{"t":"nar","x":"胖子大喜。"},{"t":"say","s":"pang","x":"卧槽！古尸！这得值多少钱？"},{"t":"nar","x":"道士猛地拉住他的手。"},{"t":"say","s":"dao","x":"别碰！这是僵尸！"},{"t":"nar","x":"胖子吓得一哆嗦。"},{"t":"say","s":"me","x":"你怎么知道？"},{"t":"nar","x":"道士指着尸体额头。"},{"t":"say","s":"dao","x":"你看，它额头上有符。"},{"t":"say","s":"me","x":"这不是你刚贴上去的吗？"},{"t":"nar","x":"道士一愣。"},{"t":"say","s":"dao","x":"职业习惯。"},{"t":"nar","x":"我和道士为那张符争了起来。"},{"t":"nar","x":"胖子不知什么时候绕到了棺材另一头，蹲在那儿，低着头，不知道在摸什么。"},{"t":"nar","x":"我当时以为他在系鞋带。"},{"t":"nar","x":"就在我们争论的时候，棺材里的尸体突然睁开了眼睛。"},{"t":"nar","x":"胖子尖叫一声。"},{"t":"nar","x":"僵尸猛地坐起，一口咬在了他的脖子上。"},{"t":"fx","w":"post","shake":2,"hpd":-30,"note":"被僵尸咬了一口"},{"t":"nar","x":"那一刻，山林里响起了三个人的惨叫。"},{"t":"nar","x":"胖子是疼的。"},{"t":"nar","x":"我是吓的。"},{"t":"nar","x":"道士是因为逃跑时踩中了自己的捕兽夹。"},{"t":"nar","x":"就是他自己亲手埋的那个。"},{"t":"nar","x":"后来我们连滚带爬地跑下山。"},{"t":"nar","x":"棺材没带走。"},{"t":"nar","x":"古董没带走。"},{"t":"nar","x":"道士的鞋也没带走。"},{"t":"nar","x":"我和胖子合力掰开捕兽夹，他的脚出来了，鞋没出来。"},{"t":"nar","x":"道士当机立断，金蝉脱壳，光着一只脚跑完了下山的路。"},{"t":"nar","x":"他说，那是他新买的运动鞋，还在七天无理由退货期内。"},{"t":"fx","w":"post","ach":"shoe"},{"t":"nar","x":"只有胖子带走了一样东西。"},{"t":"nar","x":"尸毒。"},{"t":"nar","x":"回城的路上，五菱宏光开出了它这辈子最快的速度。"},{"t":"nar","x":"胖子在后座捂着脖子骂了一路。"},{"t":"nar","x":"道士坐在副驾驶，抱着他那只光脚，念了一路经。"},{"t":"nar","x":"我问他念的是什么。"},{"t":"say","s":"dao","x":"《太上老君说常清静经》。"},{"t":"say","s":"me","x":"有用吗？"},{"t":"say","s":"dao","x":"有没有用不知道。念着，没那么疼。"},{"t":"nar","x":"三天后。"},{"t":"fx","w":"post","scene":{"p":"我家","tm":"凌晨 02:17","bg":"home"}},{"t":"nar","x":"这三天里，胖子一直在发烧。"},{"t":"nar","x":"第一天，三十八度。"},{"t":"nar","x":"第二天，三十九度。"},{"t":"nar","x":"第三天，四十度。"},{"t":"fx","w":"post","hpd":-15,"note":"高烧四十度"},{"t":"nar","x":"我劝他去医院。他说挂个号要二十块，多喝热水就好了。"},{"t":"nar","x":"于是我每天下班回来——也就是夜里十一点——给他烧一壶热水。"},{"t":"nar","x":"他喝了三天热水。"},{"t":"nar","x":"体温从三十八度，喝到了四十度。"},{"t":"nar","x":"我看着沙发上的胖子，终于意识到事情的严重性。"},{"t":"say","s":"me","x":"胖子，你可能快变僵尸了。"},{"t":"nar","x":"胖子有气无力地抬起头。"},{"t":"say","s":"pang","x":"滚，我是发烧了。"},{"t":"say","s":"me","x":"不，你听我说。僵尸中毒的症状，就是脸色发青，身体发冷，神志不清。"},{"t":"say","s":"pang","x":"我这叫感冒。"},{"t":"say","s":"me","x":"那你为什么脖子上有牙印？"},{"t":"say","s":"pang","x":"你他妈不是看见了吗！"},{"t":"say","s":"me","x":"那你为什么怕光？"},{"t":"say","s":"pang","x":"我头疼！"},{"t":"say","s":"me","x":"那你嗓子里为什么一直‘嗬嗬’的？"},{"t":"say","s":"pang","x":"我扁桃体发炎！"},{"t":"say","s":"me","x":"那你指甲为什么这么长？"},{"t":"say","s":"pang","x":"我一个月没剪了！关你屁事！"},{"t":"say","s":"me","x":"那你为什么这几天不吃饭？"},{"t":"say","s":"pang","x":"我发烧四十度！"},{"t":"nar","x":"我沉思良久。"},{"t":"nar","x":"道士曾经告诉我，糯米能够拔除尸毒。"},{"t":"nar","x":"这是中国民间流传已久的驱邪方法，尤其是南方的僵尸传说里，糯米对尸毒具有奇效。"},{"t":"nar","x":"我从小看港片里的僵尸电影长大，对此深信不疑。"},{"t":"nar","x":"为了保险起见，我还上网搜了一下。"},{"t":"nar","x":"搜索结果第一条，是一个叫“驱邪大师阿彪”的短视频账号，标题是《祖传秘方：糯米拔尸毒，三步搞定》。"},{"t":"nar","x":"三十七个赞。"},{"t":"gate","k":"like","id":"g_like"},{"t":"nar","x":"我点了第三十八个。"},{"t":"nar","x":"视频一共十五秒。"},{"t":"say","s":"biao","x":"取糯米一把……"},{"t":"nar","x":"就在这时，手机顶上弹出一条消息。"},{"t":"card","k":"notify","app":"公司群","frm":"赵总","msg":"大家睡了吗？明天早会提前到八点。"},{"t":"nar","x":"我回了个“收到”，再切回来的时候，视频已经播完了。"},{"t":"nar","x":"后面十秒说了什么，我没看到。"},{"t":"nar","x":"但我觉得，大方向我已经掌握了。"},{"t":"nar","x":"于是我去厨房煮了一锅糯米。"},{"t":"nar","x":"为确保药效，我特意煮得滚烫。"},{"t":"nar","x":"我家电饭煲有三个模式：精煮、快煮、煲粥。"},{"t":"choice","id":"c_cooker","q":"电饭煲选哪个模式？","o":[{"l":"精煮","r":[{"t":"nar","x":"精煮要四十分钟。来不及。"}]},{"l":"快煮","r":[{"t":"nar","x":"你没有犹豫。"}]},{"l":"煲粥","r":[{"t":"nar","x":"粥太稀，泼出去没有力度。"}]}]},{"t":"nar","x":"我选了快煮。"},{"t":"nar","x":"救人如救火。"},{"t":"nar","x":"我端着锅走到胖子面前。"},{"t":"say","s":"me","x":"兄弟，对不住了。"},{"t":"say","s":"pang","x":"你要干嘛？"},{"t":"say","s":"me","x":"救你。"},{"t":"say","s":"pang","x":"你先把锅放下。"},{"t":"say","s":"me","x":"相信我。"},{"t":"say","s":"pang","x":"你他妈把锅放下！"},{"t":"nar","x":"我将刚出锅的糯米泼在他身上。"},{"t":"fx","w":"post","shake":3,"hpd":-50,"note":"友军伤害","ach":"friendly"},{"t":"say","s":"me","x":"天地无极！乾坤借法！"},{"t":"nar","x":"胖子发出了撕心裂肺的惨叫。"},{"t":"say","s":"pang","x":"啊啊啊啊啊啊啊啊！！！"},{"t":"fx","w":"post","shake":2},{"t":"nar","x":"他从沙发上弹了起来，满屋乱窜，最后一头撞翻了茶几。"},{"t":"nar","x":"楼下的邻居开始用拖把杆捅天花板。"},{"t":"nar","x":"我站在原地，浑身发抖。"},{"t":"nar","x":"果然。"},{"t":"nar","x":"糯米真的对他有反应。"},{"t":"nar","x":"这说明，他已经变成僵尸了。"},{"t":"nar","x":"我立刻给道士打电话。"},{"t":"nar","x":"电话响了七声才接通。那头很吵，有人在喊“碰”。"},{"t":"say","s":"me","x":"道长！不好了！胖子尸变了！"},{"t":"say","s":"dao","x":"有什么症状？"},{"t":"say","s":"me","x":"我用糯米试了，他惨叫得特别厉害！"},{"t":"nar","x":"电话那头沉默了。"},{"t":"nar","x":"麻将声也停了。"},{"t":"say","s":"dao","x":"你用的生糯米还是熟糯米？"},{"t":"say","s":"me","x":"刚煮熟的。"},{"t":"say","s":"dao","x":"多少度？"},{"t":"say","s":"me","x":"应该有一百度。"},{"t":"nar","x":"道士沉默了更久。"},{"t":"nar","x":"最后，他用一种异常复杂的语气说："},{"t":"say","s":"dao","x":"你有没有考虑过，他可能只是烫？"},{"t":"nar","x":"我说："},{"t":"say","s":"me","x":"道长，你不懂科学。"},{"t":"fx","w":"post","ach":"science"},{"t":"act","n":"第二幕","name":"现代驱鬼有限公司"},{"t":"fx","w":"pre","scene":{"p":"市医院 急诊","tm":"凌晨","bg":"hosp"}},{"t":"nar","x":"那天夜里，我开着五菱宏光，把胖子送进了急诊。"},{"t":"nar","x":"值班的是个四十多岁的女医生，戴着眼镜，表情平静得像是这辈子什么都见过。"},{"t":"say","s":"doc","x":"怎么烫的？"},{"t":"say","s":"me","x":"糯米。"},{"t":"nar","x":"医生手里的笔停了一下。"},{"t":"say","s":"doc","x":"糯米？"},{"t":"say","s":"me","x":"刚出锅的。"},{"t":"say","s":"doc","x":"谁泼的？"},{"t":"nar","x":"我举起了手。"},{"t":"nar","x":"医生看了我一眼，又低头看胖子脖子上的牙印。"},{"t":"say","s":"doc","x":"这又是什么咬的？"},{"t":"nar","x":"胖子刚要开口，我抢先说："},{"t":"say","s":"me","x":"僵尸。"},{"t":"nar","x":"诊室里安静了几秒。"},{"t":"nar","x":"医生摘下眼镜，揉了揉眉心。"},{"t":"say","s":"doc","x":"先打一针狂犬疫苗，再打一针破伤风。"},{"t":"say","s":"me","x":"僵尸咬的也打狂犬疫苗？"},{"t":"say","s":"doc","x":"不管什么东西咬的，先打狂犬疫苗总没错。"},{"t":"nar","x":"她刷刷地写完病历，撕下一张单子递给我。"},{"t":"say","s":"doc","x":"你朋友的伤，我能治。"},{"t":"say","s":"me","x":"谢谢医生。"},{"t":"say","s":"doc","x":"你的问题，得去隔壁楼。"},{"t":"nar","x":"我抬头一看。隔壁楼门口亮着四个大字：心理门诊。"},{"t":"nar","x":"最后的诊断是：伤口感染引起的高烧，外加大面积烫伤。"},{"t":"nar","x":"烫伤比咬伤严重得多。"},{"t":"nar","x":"换句话说，僵尸咬了他一口，让他烧了三天。"},{"t":"nar","x":"我泼了他一锅，差点让他毁容。"},{"t":"nar","x":"医生建议住院观察。"},{"t":"nar","x":"胖子问住院一天多少钱。"},{"t":"nar","x":"医生说三百。"},{"t":"nar","x":"胖子当场就退烧了。"},{"t":"fx","w":"post","hpd":20,"note":"被住院费吓退了烧"},{"t":"nar","x":"他在急诊室的走廊里输了一晚上液。"},{"t":"fx","w":"pre","scene":{"p":"我家","tm":"第二天","bg":"home"}},{"t":"nar","x":"第二天，胖子从医院回来了。"},{"t":"nar","x":"他浑身缠着纱布，看我的眼神充满杀意。"},{"t":"nar","x":"道士也来了。"},{"t":"nar","x":"他左脚缠着纱布，趿着一只棉拖鞋，右脚穿着一只运动鞋。"},{"t":"nar","x":"那是他那双新鞋里，唯一活着下山的一只。"},{"t":"nar","x":"他姓张，名守正，道号玄微子。"},{"t":"fx","w":"post","name":["dao","张道长"]},{"t":"nar","x":"据他自己介绍，他祖上曾经在龙虎山修道，家传一百二十七代，擅长奇门遁甲、符箓雷法、寻龙点穴、阴宅堪舆。"},{"t":"say","s":"me","x":"你上次不是说自己是茅山第三十八代传人吗？"},{"t":"nar","x":"张道长面不改色。"},{"t":"say","s":"dao","x":"我家业务范围比较广。"},{"t":"nar","x":"这一点我信。"},{"t":"nar","x":"我去过他的道观。城中村里一间十二平米的出租屋，一张床，一个电磁炉，门上贴着手写的三个字：玄微观。"},{"t":"nar","x":"墙上并排挂着三幅像：太上老君、关公、财神爷。"},{"t":"nar","x":"我问他为什么挂得这么杂。"},{"t":"say","s":"dao","x":"老君管修行，关公管平安，财神管花呗。"},{"t":"nar","x":"胖子冷笑。"},{"t":"say","s":"pang","x":"那你怎么还欠花呗？"},{"t":"say","s":"dao","x":"道法自然，消费主义不自然。"},{"t":"fx","w":"post","ach":"dao"},{"t":"nar","x":"道长从怀里掏出一个罗盘。"},{"t":"nar","x":"就是夜市上十五块钱买的那个，指针还在转。"},{"t":"say","s":"dao","x":"别闹了。那口棺材有问题。"},{"t":"say","s":"pang","x":"什么问题？"},{"t":"say","s":"dao","x":"我回去查了县志。青龙山下面，原来有一座明末清初的义庄，专门收容横死之人。后来当地闹过一场僵尸祸，死了三十七个人。村民请道士设下七星镇煞局，把东西封在山里。"},{"t":"nar","x":"义庄这种地方，现在的年轻人大多没听说过。"},{"t":"nar","x":"旧时候，人客死异乡，尸骨一时运不回老家，就先寄放在义庄里，等家里人来领。"},{"t":"nar","x":"有的人，一等就是几十年。"},{"t":"nar","x":"有的人，永远也没等到。"},{"t":"nar","x":"道长又从包里掏出一张复印纸，说是从县图书馆复印的，复印费两块，回头找我报销。"},{"t":"nar","x":"纸上是一段竖排的繁体字。我凑过去，只认出了中间一句："},{"t":"paper","x":"……夜有尸起，伤人三十有七……"},{"t":"say","s":"me","x":"这上面写的是伤，不是死。"},{"t":"say","s":"dao","x":"差不多。"},{"t":"nar","x":"胖子摸了摸脖子上的纱布。"},{"t":"say","s":"pang","x":"差多了。"},{"t":"nar","x":"我皱眉。"},{"t":"say","s":"me","x":"所以我们把封印打开了？"},{"t":"say","s":"dao","x":"对。"},{"t":"say","s":"pang","x":"那你为什么当时不阻止？"},{"t":"say","s":"dao","x":"我阻止了。"},{"t":"say","s":"pang","x":"你说什么了？"},{"t":"say","s":"dao","x":"我说了里面很凶。"},{"t":"say","s":"pang","x":"你后来还说打开看看值不值钱！"},{"t":"say","s":"dao","x":"修道之人，也得与时俱进。"},{"t":"nar","x":"就在这时，道长的手机响了。"},{"t":"nar","x":"他低头看了一眼。"},{"t":"say","s":"dao","x":"坏了。"},{"t":"say","s":"me","x":"怎么？"},{"t":"say","s":"dao","x":"有人在山上直播。"},{"t":"nar","x":"他把手机递给我们。"},{"t":"nar","x":"屏幕里，一个穿着黑色冲锋衣的主播，正站在那口棺材前面。"},{"t":"nar","x":"主播叫铁头，专做“科学打假”，二十多万粉丝。他的口头禅是：“这个世界上没有鬼，只有没文化。”"},{"t":"card","k":"live","title":"午夜挑战百年鬼棺！科学打假！主播绝不相信有鬼！","viewers":"2.3万"},{"t":"nar","x":"主播正对着镜头大喊："},{"t":"say","s":"tie","x":"家人们！今天给大家揭秘所谓的僵尸！什么封建迷信，全部都是假的！"},{"t":"say","s":"tie","x":"所谓保存完好的古尸，科学上叫湿尸，是墓里缺氧潮湿、细菌没法分解造成的！所谓诈尸，不过是尸体里的气体膨胀，导致肌肉抽动！家人们，这叫科学！"},{"t":"nar","x":"他说完，一脚踢开棺材盖。"},{"t":"nar","x":"棺材里空空如也。"},{"t":"nar","x":"主播愣住了。"},{"t":"nar","x":"评论区疯狂刷屏。"},{"t":"dan","x":"主播后面有人"},{"t":"dan","x":"主播后面有人"},{"t":"dan","x":"主播后面有人"},{"t":"nar","x":"主播不屑地笑了。"},{"t":"say","s":"tie","x":"又来这种低级套路？哪有人？"},{"t":"nar","x":"就在这时。"},{"t":"nar","x":"一只青灰色的手，从镜头后方缓缓搭在了他的肩膀上。"},{"t":"nar","x":"主播回头。"},{"t":"nar","x":"屏幕猛地晃动。"},{"t":"nar","x":"一声惨叫后，直播中断。"},{"t":"fx","w":"post","shake":2,"ach":"behind"},{"t":"nar","x":"半分钟后，直播间重新亮了。"},{"t":"nar","x":"镜头前坐着那个清朝官服的僵尸。"},{"t":"nar","x":"它直勾勾地盯着手机。"},{"t":"nar","x":"评论区炸了。"},{"t":"dan","x":"？？？"},{"t":"dan","x":"主播换人了？"},{"t":"dan","x":"这特效多少钱？"},{"t":"dan","x":"这身官服哪里买的，求链接"},{"t":"nar","x":"僵尸盯着那些飞过去的字，看了很久。"},{"t":"nar","x":"然后伸出手指，在屏幕上戳了几下。"},{"t":"nar","x":"直播间弹出一条提示。"},{"t":"sys","x":"主播已开启带货橱窗。","n":"直播间"},{"t":"card","k":"shop"},{"t":"nar","x":"像是在回应那条求链接的评论。"},{"t":"nar","x":"橱窗里挂着三件商品：强光手电，防狼喷雾，以及——开过光的平安符，三十九块九一个。"},{"t":"nar","x":"一个科学打假的主播，橱窗里卖的是开过光的平安符。"},{"t":"nar","x":"那一刻，我不知道该先震惊哪一件事。"},{"t":"nar","x":"在线人数从两万三，一路涨到了八十七万。"},{"t":"nar","x":"我们三人陷入了沉默。"},{"t":"say","s":"pang","x":"它在干什么？"},{"t":"say","s":"dao","x":"不知道。"},{"t":"say","s":"me","x":"它好像在研究怎么开直播。"},{"t":"nar","x":"道长闭上眼睛。"},{"t":"say","s":"dao","x":"完了。"},{"t":"say","s":"me","x":"怎么？"},{"t":"say","s":"dao","x":"这东西已经开始适应现代社会了。"},{"t":"say","s":"pang","x":"它适应得比我妈都快。我妈到现在还不会开直播。"},{"t":"nar","x":"当天晚上，我们正式成立了公司。"},{"t":"nar","x":"道长说，祸是我们闯出来的，总得有人收拾。"},{"t":"nar","x":"这是我认识他以来，他说过的最像道士的一句话。"},{"t":"nar","x":"说完，他又补了一句："},{"t":"say","s":"dao","x":"顺便还能赚点钱。"},{"t":"nar","x":"公司叫什么，我们吵了很久。"},{"t":"nar","x":"我提议叫“糯米驱邪有限公司”。"},{"t":"nar","x":"好记，有画面感，自带流量。"},{"t":"nar","x":"胖子当场扯下一截纱布，要勒死我。"},{"t":"choice","id":"c_vote","q":"公司名称投票：糯米驱邪有限公司","o":[{"l":"赞成","r":[{"t":"nar","x":"你投了自己一票。"}]},{"l":"反对","r":[{"t":"nar","x":"你看了看胖子身上的纱布，举起了手。"},{"t":"nar","x":"然后你想起这名字是你起的，又放下了。"}]},{"l":"弃权","r":[{"t":"nar","x":"道长替你把手举了起来。"}]}]},{"t":"nar","x":"最后投票表决。我一票，道长一票，胖子反对。"},{"t":"nar","x":"二比一。"},{"t":"nar","x":"道长之所以投我，是因为我答应把短视频收益分他一半，拿去还花呗。"},{"t":"nar","x":"可惜工商系统没让我们通过。"},{"t":"nar","x":"我在手机上提交注册申请，填完名字的那一刻，屏幕上弹出一行红字："},{"t":"gate","k":"form","id":"g_form"},{"t":"sys","x":"企业名称含有封建迷信内容，请修改后重新提交。","s":"biz"},{"t":"fx","w":"post","ach":"feudal"},{"t":"nar","x":"“糯米驱邪”这四个字，最后只能拿来当短视频账号的名字。"},{"t":"card","k":"license"},{"t":"nar","x":"注册经营范围当然没敢这么写。"},{"t":"nar","x":"我们写的是：文化艺术交流活动策划、民俗文化咨询、企业形象策划，以及保洁服务。"},{"t":"nar","x":"道长说，驱鬼本质上也是一种保洁。"},{"t":"nar","x":"营业执照要三个工作日才能批下来。"},{"t":"nar","x":"但生意不等人。"},{"t":"nar","x":"反正我们的考古队也没有执照。"},{"t":"nar","x":"道长负责法术。"},{"t":"nar","x":"胖子负责体力劳动。"},{"t":"nar","x":"我负责运营和短视频剪辑。"},{"t":"nar","x":"当天夜里，我给公司剪出了第一条宣传视频：道长在小区楼下教闪身步。"},{"t":"nar","x":"标题叫《年轻人不知道的传统驱邪术》。"},{"t":"nar","x":"播放量四百，点赞十一。"},{"t":"nar","x":"其中一个赞，来自一个认证为“青龙御府营销中心”的账号。"},{"t":"nar","x":"公司开张第一天，就接到了第一单生意。"},{"t":"nar","x":"一个房地产开发商请我们去看楼盘。"},{"t":"nar","x":"据说他们新建的小区，每到半夜十二点，地下车库就会响起女人的哭声。"},{"t":"nar","x":"开发商姓孙，四十多岁，手腕上缠着一串很粗的佛珠，佛珠外面又系了一根红绳。"},{"t":"nar","x":"楼盘叫青龙御府，就建在青龙山脚下。广告牌上写着八个字：依山而居，龙脉护佑。"},{"t":"nar","x":"一期刚交房，二期下个月开盘。"},{"t":"nar","x":"“业主群已经传疯了，说车库闹鬼。”孙总一边擦汗一边说，“鬼我倒是不怕。我怕的是业主群。”"},{"t":"nar","x":"道长后来告诉我，青龙御府那块地，正好就是县志里那座义庄的旧址。"},{"t":"nar","x":"但当时他什么都没说。"},{"t":"nar","x":"因为孙总已经把定金转过来了。"},{"t":"fx","w":"pre","scene":{"p":"青龙御府 地下车库","tm":"00:00","bg":"garage"}},{"t":"nar","x":"道长带着我们来到现场。"},{"t":"nar","x":"他身穿黄色道袍，手持桃木剑，脚踏七星步，口中念念有词。"},{"t":"nar","x":"车库里很冷。胖子一直缩着脖子，时不时伸手摸一下领口。"},{"t":"nar","x":"道长说，这是阴气重。"},{"t":"nar","x":"我当时没多想。"},{"t":"say","s":"dao","x":"天清地灵，兵随印转，将逐令行！"},{"t":"nar","x":"桃木剑猛地一挥。"},{"t":"say","s":"dao","x":"何方妖孽！速速现形！"},{"t":"nar","x":"哭声果然停了。"},{"t":"nar","x":"开发商激动得差点跪下。"},{"t":"say","s":"sun","x":"道长！真神了！"},{"t":"nar","x":"道长微微颔首。"},{"t":"say","s":"dao","x":"区区孤魂野鬼，不足挂齿。"},{"t":"nar","x":"下一秒，车库喇叭响了。"},{"t":"sys","x":"各位业主，物业温馨提醒，地下车库广播设备维修完毕，测试音频已关闭。","s":"bc"},{"t":"nar","x":"道长保持着挥剑的姿势，一动不动。"},{"t":"nar","x":"胖子低声说："},{"t":"say","s":"pang","x":"道长，这算驱鬼成功吗？"},{"t":"nar","x":"道长说："},{"t":"say","s":"dao","x":"当然。"},{"t":"say","s":"pang","x":"为什么？"},{"t":"say","s":"dao","x":"你就说鬼哭停没停吧。"},{"t":"fx","w":"post","ach":"stop"},{"t":"nar","x":"后来我们才知道，物业经理调试广播的时候，本来想放一段轻音乐，结果下错了文件，下成了《恐怖音效合集·女鬼篇》，每天半夜十二点自动播放，循环了整整一个星期。"},{"t":"nar","x":"那天我们赚了两千块。"},{"t":"nar","x":"道长拿走一千。"},{"t":"nar","x":"胖子拿走五百。"},{"t":"nar","x":"我拿走五百。"},{"t":"nar","x":"道长多拿五百，理由是桃木剑有损耗。"},{"t":"say","s":"pang","x":"你那把桃木剑是九块九包邮的。"},{"t":"say","s":"dao","x":"那也是损耗。"},{"t":"nar","x":"拿到钱的第一件事，道长打开支付宝，还了一千块花呗。"},{"t":"fx","w":"post","hbd":1000,"note":"还了一千"},{"t":"nar","x":"然后他盯着屏幕，长长地叹了一口气。"},{"t":"say","s":"dao","x":"还剩一万七。"},{"t":"say","s":"dao","x":"道阻且长啊。"},{"t":"nar","x":"第二天，开发商又打电话来了。"},{"t":"say","s":"sun","x":"道长，出大事了！"},{"t":"say","s":"dao","x":"又听见哭声了？"},{"t":"say","s":"sun","x":"不是！"},{"t":"say","s":"dao","x":"那是什么？"},{"t":"say","s":"sun","x":"地下车库发现一具穿清朝官服的尸体！"},{"t":"act","n":"第三幕","name":"僵尸也要扫码"},{"t":"fx","w":"pre","scene":{"p":"青龙御府 负二层","tm":"22:00","bg":"garage"}},{"t":"nar","x":"我们赶到现场时，地下车库已经被封锁。"},{"t":"nar","x":"封锁的不是警察，是物业。"},{"t":"nar","x":"两块“设备检修，暂停使用”的牌子，加一卷垃圾分类宣传用的彩带。"},{"t":"nar","x":"孙总不敢报警。"},{"t":"nar","x":"他说，报警可以，但得等二期开盘以后。"},{"t":"nar","x":"据物业经理说，尸体是晚上九点被保洁阿姨发现的。"},{"t":"nar","x":"当时它直挺挺地站在负二层的角落里，一动不动。"},{"t":"nar","x":"保洁阿姨以为是哪个业主摆的手办，还拿抹布给它擦了擦灰。"},{"t":"nar","x":"擦到第三下，它眨了一下眼。"},{"t":"nar","x":"保洁阿姨当场就辞职了。"},{"t":"nar","x":"一辆黑色奔驰旁边，站着那个从古墓里跑出来的僵尸。"},{"t":"nar","x":"它穿着一身清朝官服，双手平伸，脸色青白，十根手指长着漆黑的指甲。"},{"t":"nar","x":"旁边还有个保安。"},{"t":"nar","x":"保安拿着手机，正在跟它讲道理。"},{"t":"nar","x":"保安姓周，六十多岁，在这个小区干了八年。来这儿之前，他在殡仪馆干了二十年。"},{"t":"say","s":"zhou","x":"活的死的，我都见过。"},{"t":"say","s":"zhou","x":"先生，您这个情况我理解，但是您没有停车记录，系统不允许免费出场。"},{"t":"say","s":"zom","x":"嗬……"},{"t":"say","s":"zhou","x":"您别吓唬我，我们这是智慧停车场。"},{"t":"say","s":"zom","x":"嗬嗬……"},{"t":"say","s":"zhou","x":"您扫这个二维码。"},{"t":"card","k":"qr"},{"t":"nar","x":"僵尸低头看着二维码。"},{"t":"nar","x":"伸出一根僵硬的手指。"},{"t":"nar","x":"戳了戳。"},{"t":"nar","x":"没反应。"},{"t":"nar","x":"又戳了戳。"},{"t":"nar","x":"还是没反应。"},{"t":"nar","x":"僵尸想了想，从袖子里摸出一枚铜钱，递了过去。"},{"t":"nar","x":"老周接过来，对着灯看了看。"},{"t":"nar","x":"康熙通宝。"},{"t":"nar","x":"他把铜钱还给了僵尸。"},{"t":"say","s":"zhou","x":"先生，我们这儿不收现金。"},{"t":"nar","x":"顿了顿，又补了一句。"},{"t":"say","s":"zhou","x":"也不收文物。"},{"t":"fx","w":"post","ach":"relic"},{"t":"nar","x":"保安叹了口气。"},{"t":"say","s":"zhou","x":"先生，您这样不行。得用微信。"},{"t":"nar","x":"道长冲过去，一把将保安拉开。"},{"t":"say","s":"dao","x":"孽障！休得害人！"},{"t":"nar","x":"僵尸缓缓转过头。"},{"t":"nar","x":"道长猛地掏出一张黄符，啪地贴在僵尸额头上。"},{"t":"nar","x":"僵尸不动了。"},{"t":"nar","x":"我惊呆了。"},{"t":"say","s":"me","x":"真的有用！"},{"t":"nar","x":"道长长舒一口气。"},{"t":"say","s":"dao","x":"祖师爷留下的符箓，岂是浪得虚名？"},{"t":"nar","x":"就在这时，僵尸抬起一只手。"},{"t":"nar","x":"把符撕了下来。"},{"t":"nar","x":"低头看了看。"},{"t":"nar","x":"然后贴在了旁边奔驰车的挡风玻璃上。"},{"t":"say","s":"pang","x":"它是不是把这当罚单了？"},{"t":"say","s":"me","x":"我觉得是。"},{"t":"nar","x":"老周在旁边点了点头。"},{"t":"say","s":"zhou","x":"那辆车确实违停了。一辆车占俩车位。"},{"t":"nar","x":"道长脸色骤变。"},{"t":"say","s":"dao","x":"快跑！"},{"t":"nar","x":"僵尸猛地朝我们扑来。"},{"t":"nar","x":"准确地说，是朝胖子扑来。"},{"t":"nar","x":"我们三人撒腿就跑。"},{"t":"nar","x":"穿过地下车库时，我想起民间传说，说僵尸关节僵硬，只能直线跳跃。"},{"t":"nar","x":"于是我灵机一动。"},{"t":"say","s":"me","x":"走楼梯！它不会拐弯！"},{"t":"nar","x":"我们冲进消防通道，连滚带爬地上了三层楼。"},{"t":"nar","x":"我扶着墙，气喘吁吁。"},{"t":"say","s":"me","x":"看见没有，民俗知识还是有用的。"},{"t":"nar","x":"胖子指着我身后。"},{"t":"say","s":"pang","x":"你看那是什么？"},{"t":"nar","x":"我回头。"},{"t":"sys","x":"叮——三楼到了。","s":"lift"},{"t":"nar","x":"电梯门缓缓打开。"},{"t":"nar","x":"僵尸从电梯里走了出来。"},{"t":"nar","x":"它甚至还按了开门键。"},{"t":"nar","x":"我们三人看着它。"},{"t":"nar","x":"它看着我们。"},{"t":"nar","x":"道长喃喃道："},{"t":"say","s":"dao","x":"祖师爷没说过，僵尸会坐电梯啊。"},{"t":"fx","w":"post","ach":"lift"},{"t":"fx","w":"pre","scene":{"p":"物业办公室","tm":"23:30","bg":"office"}},{"t":"nar","x":"最后，我们逃进了小区物业办公室。"},{"t":"nar","x":"办公室里只有一个值夜班的小姑娘，戴着耳机在追剧。"},{"t":"nar","x":"我们三个撞门进来的时候，她抬头看了一眼，摘下一边耳机。"},{"t":"say","s":"girl","x":"交物业费请明天白天来。"},{"t":"nar","x":"然后又把耳机戴了回去。"},{"t":"nar","x":"道长用朱砂画了一道符，将房门封住。"},{"t":"nar","x":"僵尸在门外不断拍打。"},{"t":"nar","x":"小姑娘又摘下一边耳机。"},{"t":"say","s":"girl","x":"外面谁啊？"},{"t":"say","s":"me","x":"僵尸。"},{"t":"say","s":"girl","x":"哦。"},{"t":"nar","x":"她把耳机戴了回去。"},{"t":"nar","x":"胖子捂着脖子，脸色煞白。"},{"t":"say","s":"pang","x":"怎么办？要不报警吧！"},{"t":"say","s":"me","x":"怎么跟警察解释？"},{"t":"say","s":"pang","x":"就说有人追杀我们！"},{"t":"say","s":"me","x":"穿清朝官服？"},{"t":"say","s":"pang","x":"对！"},{"t":"say","s":"me","x":"还会坐电梯？"},{"t":"say","s":"pang","x":"对！"},{"t":"nar","x":"我沉默了一下。"},{"t":"say","s":"me","x":"那咱们最好别提盗墓的事。"},{"t":"nar","x":"门外的拍门声一下一下，很有节奏，像是在等人应门。"},{"t":"nar","x":"凌晨一点，我的手机震了一下。"},{"t":"fx","w":"post","scene":{"p":"物业办公室","tm":"01:00","bg":"office"}},{"t":"nar","x":"钉钉。"},{"t":"card","k":"notify","app":"钉钉","frm":"赵总","msg":"明早九点前，把下周的选题方案发我。"},{"t":"nar","x":"门外，僵尸还在拍门。"},{"t":"choice","id":"c_reply","q":"凌晨一点，赵总在钉钉上找你。","o":[{"l":"回复：收到","r":[]},{"l":"不回，先保命","r":[{"t":"nar","x":"你把手机扣在了桌上。"},{"t":"nar","x":"三秒后，你又把它翻了过来。"}],"ach":"rebel"}]},{"t":"nar","x":"我盯着屏幕看了很久，手指自己动了起来，回了两个字："},{"t":"say","s":"me","x":"收到。"},{"t":"fx","w":"post","ach":"shoudao"},{"t":"nar","x":"胖子看着我。"},{"t":"say","s":"pang","x":"你都这样了，还回？"},{"t":"say","s":"me","x":"习惯了。"},{"t":"nar","x":"那一刻，我有点分不清，门外那个和手机里这个，到底哪个更吓人。"},{"t":"nar","x":"道长突然开口。"},{"t":"say","s":"dao","x":"我知道了。"},{"t":"nar","x":"他从背包里掏出一本泛黄的古籍。"},{"t":"nar","x":"书名叫《茅山镇尸秘录》。"},{"t":"nar","x":"我瞥了一眼封底，上面印着一行小字：定价二十九元八角，本书仅供民俗研究参考。"},{"t":"nar","x":"他翻了半天，指着其中一页。"},{"t":"say","s":"dao","x":"原来如此！此尸并非普通僵尸，而是守陵尸！"},{"t":"say","s":"me","x":"什么意思？"},{"t":"say","s":"dao","x":"守陵尸生前被秘术炼制，死后负责守护古墓中的宝物。只要宝物没有离开墓穴，它便不会主动伤人。一旦宝物被盗，它就会循着气息一路追杀盗墓者。"},{"t":"nar","x":"我愣住了。"},{"t":"say","s":"me","x":"可是我们什么也没拿啊。"},{"t":"nar","x":"胖子突然不说话了。"},{"t":"nar","x":"道长看向他。"},{"t":"nar","x":"我也看向他。"},{"t":"nar","x":"胖子低着头。"},{"t":"say","s":"pang","x":"你们看我干什么？"},{"t":"say","s":"me","x":"你是不是拿了什么？"},{"t":"say","s":"pang","x":"没有。"},{"t":"say","s":"me","x":"真没有？"},{"t":"say","s":"pang","x":"就一个小东西。"},{"t":"nar","x":"他从脖子里掏出一枚玉佩。"},{"t":"nar","x":"通体墨绿，刻着一只盘踞的龙。"},{"t":"fx","w":"post","item":"jade"},{"t":"nar","x":"我忽然想起那天晚上，他蹲在棺材另一头“系鞋带”的样子。"},{"t":"nar","x":"想起车库里，他一直缩着脖子喊冷。"},{"t":"nar","x":"道长眼睛瞬间瞪大。"},{"t":"say","s":"dao","x":"青龙镇魂玉！"},{"t":"say","s":"pang","x":"什么玉？"},{"t":"say","s":"dao","x":"青龙镇魂玉！传说中可以号令阴兵、镇压百鬼的至宝！"},{"t":"nar","x":"我倒吸一口凉气。"},{"t":"say","s":"me","x":"那岂不是值很多钱？"},{"t":"say","s":"dao","x":"价值连城！"},{"t":"nar","x":"胖子眼睛亮了。"},{"t":"say","s":"pang","x":"真的？"},{"t":"nar","x":"道长拿出手机。"},{"t":"say","s":"dao","x":"我先搜一下闲鱼有没有同款。"},{"t":"act","n":"第四幕","name":"真正的宝藏"},{"t":"nar","x":"闲鱼上有同款。"},{"t":"nar","x":"三千多件。"},{"t":"nar","x":"最便宜的十九块九，包邮，还送开光证书。"},{"t":"card","k":"xianyu2"},{"t":"nar","x":"道长一件一件翻过去，翻了足足二十分钟。"},{"t":"nar","x":"最后，他抬起头，郑重宣布：胖子这枚，是真的。"},{"t":"say","s":"me","x":"为什么？"},{"t":"nar","x":"道长指了指门外。"},{"t":"say","s":"dao","x":"闲鱼上那些，没有一件会被僵尸追着要。"},{"t":"nar","x":"拍门声又响了三下。"},{"t":"nar","x":"那天晚上，我们最后是被广场舞救下的。"},{"t":"fx","w":"pre","scene":{"p":"小区广场","tm":"05:30","bg":"dawn"}},{"t":"nar","x":"凌晨五点半，楼下的小广场上，音乐准时响起。"},{"t":"nar","x":"鼓点震得物业办公室的玻璃嗡嗡作响。"},{"t":"nar","x":"门外的拍门声，停了。"},{"t":"nar","x":"我们三个趴在百叶窗后面，往外看。"},{"t":"nar","x":"广场上，三四十个阿姨排成整整齐齐的方阵，正在跳一支节奏很强的舞。"},{"t":"nar","x":"双臂前伸，原地蹦跳，一跳一顿。"},{"t":"nar","x":"僵尸站在物业办公室门口，看呆了。"},{"t":"nar","x":"领舞的刘阿姨回头看见它，冲它招了招手："},{"t":"say","s":"liu","x":"那边那个，站着干嘛？过来一起跳啊！"},{"t":"nar","x":"僵尸犹豫了一下。"},{"t":"nar","x":"然后一跳，一跳，跳进了方阵的最后一排。"},{"t":"gate","k":"dance","id":"g_dance"},{"t":"nar","x":"双臂平伸，跟着鼓点，一下一下地跳。"},{"t":"nar","x":"严丝合缝。"},{"t":"nar","x":"刘阿姨回头看了一眼，大声喊："},{"t":"say","s":"liu","x":"后排那个新来的！动作很标准嘛！"},{"t":"fx","w":"post","ach":"dance"},{"t":"nar","x":"僵尸愣住了。"},{"t":"nar","x":"然后跳得更起劲了。"},{"t":"nar","x":"胖子看呆了。"},{"t":"say","s":"pang","x":"它跳得比我好。"},{"t":"say","s":"dao","x":"它练了三百年。"},{"t":"nar","x":"刘阿姨掏出手机，冲着队伍录了一段视频。"},{"t":"nar","x":"天边开始泛白的时候，僵尸停了下来。"},{"t":"nar","x":"它看了看东边的天色，跳着离开了广场，一路跳进地下车库的入口，消失在黑暗里。"},{"t":"nar","x":"我们三个又等了十分钟，确认它没再出来，才溜进车库，开着五菱宏光逃了出去。"},{"t":"nar","x":"一路上，车底下一直有“咚、咚”的声音。"},{"t":"nar","x":"我说，二手车，底盘松了。"},{"t":"fx","w":"post","item":"car","v":2},{"t":"nar","x":"当天中午，刘阿姨的视频上了同城热搜。"},{"t":"nar","x":"标题是：《我们队新来的老师傅，动作太标准了！》"},{"t":"nar","x":"评论区："},{"t":"dan","x":"这才是真正的国潮"},{"t":"dan","x":"老爷子腿脚真好"},{"t":"dan","x":"只有我觉得后排那位没有呼吸吗"},{"t":"nar","x":"孙总连夜改了楼盘的广告语。"},{"t":"nar","x":"新的广告语是："},{"t":"card","k":"billboard","x":"青龙御府——三百年老住户的选择。"},{"t":"fx","w":"pre","scene":{"p":"我家","tm":"第二天夜里","bg":"home"}},{"t":"nar","x":"道长研究了整整一个晚上。"},{"t":"nar","x":"最终得出结论。"},{"t":"nar","x":"我们必须回到青龙山，把镇魂玉放回原位。"},{"t":"nar","x":"否则僵尸会一直追杀我们。"},{"t":"say","s":"pang","x":"那宝藏怎么办？"},{"t":"say","s":"dao","x":"命重要还是钱重要？"},{"t":"say","s":"pang","x":"钱。"},{"t":"say","s":"dao","x":"巧了，我也是这么想的。"},{"t":"nar","x":"于是我们决定："},{"t":"nar","x":"先回古墓寻找宝藏。"},{"t":"nar","x":"再把玉佩放回去。"},{"t":"nar","x":"如果运气好，顺便把僵尸封印起来。"},{"t":"nar","x":"计划非常完美。"},{"t":"nar","x":"唯一的问题是，我们不知道墓里还有什么。"},{"t":"nar","x":"为此，道长准备了专业装备。"},{"t":"nar","x":"桃木剑一把。"},{"t":"nar","x":"八卦镜一面。"},{"t":"nar","x":"朱砂三瓶。"},{"t":"nar","x":"黑狗血半桶。"},{"t":"nar","x":"糯米二十斤。"},{"t":"fx","w":"post","item":"peach"},{"t":"fx","w":"post","item":"bagua"},{"t":"fx","w":"post","item":"cinnabar"},{"t":"fx","w":"post","item":"blood"},{"t":"fx","w":"post","item":"rice"},{"t":"nar","x":"胖子看见糯米，当场后退三米。"},{"t":"say","s":"pang","x":"谁再拿糯米碰我，我跟谁拼命！"},{"t":"nar","x":"我安慰他。"},{"t":"say","s":"me","x":"放心，这次都是生的。"},{"t":"nar","x":"这套装备一共花了四百三十块，道长用花呗付的。"},{"t":"fx","w":"post","hbd":-430,"note":"装备钱"},{"t":"nar","x":"黑狗血是他从菜市场弄来的。我问他哪个摊位卖黑狗血，他说你别管。"},{"t":"nar","x":"直到出发前，胖子从桶里捞出了一片毛肚。"},{"t":"say","s":"dao","x":"说明这条狗生前伙食很好。"},{"t":"fx","w":"post","item":"blood","v":2},{"t":"nar","x":"出发前，我在楼下早餐店买了一份热乎的糯米饭当夜宵，装进保温饭盒，塞在背包最底下。"},{"t":"fx","w":"post","item":"box"},{"t":"nar","x":"胖子让我离他至少一米远。"},{"t":"fx","w":"pre","scene":{"p":"青龙山","tm":"01:00","bg":"mount"}},{"t":"nar","x":"凌晨一点。"},{"t":"nar","x":"我们再次来到青龙山。"},{"t":"nar","x":"山脚下的树林边停着一辆车，熄着火，车里黑漆漆的。我们当时谁都没在意。"},{"t":"nar","x":"山中阴风阵阵。"},{"t":"nar","x":"老槐树上挂着不知谁留下的红绳，路口的土地庙里供着半碗冷饭。"},{"t":"nar","x":"按照当地旧俗，夜里过山不喊人全名，经过无主坟不回头，更不能随便捡路边的铜钱。"},{"t":"nar","x":"刚进山没多久，身后忽然传来一个声音。"},{"t":"say","s":"wai","x":"王建国——"},{"t":"nar","x":"我们三个同时停住了脚步。"},{"t":"nar","x":"王建国是胖子的大名。全世界知道这个名字的人，不超过二十个。"},{"t":"say","s":"wai","x":"王建国——你在哪儿——"},{"t":"nar","x":"那声音拖得很长，在山谷里荡来荡去。"},{"t":"nar","x":"胖子的腿开始抖。"},{"t":"choice","id":"c_name","q":"身后有人在喊胖子的全名。","o":[{"l":"回头看看","r":[{"t":"nar","x":"你的脖子刚转到一半，就被道长一把按了回来。"}]},{"l":"替他答应一声","r":[{"t":"nar","x":"你刚张开嘴，道长就捂住了你的嘴。"}],"ach":"soul"},{"l":"直挺挺往前走","r":[{"t":"nar","x":"你目视前方，走得比胖子还直。"}]}]},{"t":"say","s":"dao","x":"别回头，别答应。"},{"t":"say","s":"pang","x":"为什么？"},{"t":"say","s":"dao","x":"夜里过山，被人喊了全名，一回头，一答应，魂就跟着走了。"},{"t":"nar","x":"我们三个直挺挺地往前走，谁也不敢回头。"},{"t":"nar","x":"路边就是一片无主坟，黑压压的，连块碑都没有。"},{"t":"nar","x":"身后的声音越来越近。"},{"t":"say","s":"wai","x":"王建国——王建国先生——"},{"t":"nar","x":"还加了“先生”。"},{"t":"nar","x":"这鬼还挺有礼貌。"},{"t":"nar","x":"一道白光从身后照过来，把我们三个的影子投在面前的石阶上。"},{"t":"nar","x":"然后，一个人影绕到了我们前面。"},{"t":"nar","x":"他戴着头盔，穿着一件黄色的外卖服，手里拎着一个塑料袋。"},{"t":"fx","w":"post","name":["wai","外卖小哥"]},{"t":"say","s":"wai","x":"王建国先生是吧？您的外卖。"},{"t":"nar","x":"我们三个看着他。"},{"t":"nar","x":"他把塑料袋塞进胖子手里。"},{"t":"say","s":"wai","x":"炸鸡全家桶，加两瓶可乐。您这地址也太难找了——‘青龙山半山腰，土地庙往左第三座坟’——我找了四十分钟。"},{"t":"nar","x":"他擦了擦汗。"},{"t":"say","s":"wai","x":"麻烦给个五星好评啊。"},{"t":"gate","k":"stars","id":"g_stars"},{"t":"fx","w":"post","item":"takeout"},{"t":"nar","x":"说完，他转身下山，头灯一晃一晃，消失在树林里。"},{"t":"nar","x":"山里重新安静了下来。"},{"t":"nar","x":"道长缓缓转过头，看着胖子。"},{"t":"say","s":"dao","x":"你点的？"},{"t":"say","s":"pang","x":"我饿。"},{"t":"say","s":"dao","x":"你知不知道，夜里在山上被人喊全名有多危险？"},{"t":"say","s":"pang","x":"那也得有人知道我全名啊。"},{"t":"say","s":"dao","x":"外卖平台上，收货人写的就是你的全名。"},{"t":"nar","x":"胖子沉默了一下。"},{"t":"say","s":"pang","x":"……我实名认证了。"},{"t":"fx","w":"post","ach":"realname"},{"t":"nar","x":"又往上走了一段，胖子突然弯下腰。"},{"t":"nar","x":"路边的草丛里，躺着一枚铜钱。"},{"t":"choice","id":"c_coin","q":"路边有一枚铜钱。","o":[{"l":"捡","r":[{"t":"nar","x":"你和胖子同时伸出了手。"}]},{"l":"不捡","r":[{"t":"nar","x":"你没动。胖子动了。"}]}]},{"t":"nar","x":"他的手刚伸出去，就被道长一巴掌拍了回来。"},{"t":"say","s":"dao","x":"不要命了？"},{"t":"say","s":"pang","x":"就一枚铜钱。"},{"t":"say","s":"dao","x":"路边的铜钱，是给孤魂野鬼的买路钱。你捡了，就是欠了人家的债。"},{"t":"say","s":"pang","x":"孤魂野鬼也用钱？"},{"t":"say","s":"dao","x":"不然你以为清明节烧纸钱是干什么的？"},{"t":"nar","x":"胖子愣了愣。"},{"t":"say","s":"pang","x":"人都死了，还得花钱？"},{"t":"nar","x":"“死了也得花。”道长说，“下面也有物价。”"},{"t":"nar","x":"胖子把手缩了回来，小声嘀咕：“那也太惨了。”"},{"t":"nar","x":"我也觉得惨。"},{"t":"nar","x":"人这一辈子，活着的时候拼命挣钱，死了还得接着花钱。"},{"t":"nar","x":"连个喘气的机会都没有。"},{"t":"nar","x":"后来我才知道，死了不光得花钱。"},{"t":"nar","x":"还得上班。"},{"t":"nar","x":"半山腰的老槐树下，那口棺材还在原地。"},{"t":"nar","x":"棺材盖是合着的。"},{"t":"nar","x":"我记得很清楚，那天晚上我们逃跑的时候，谁都没顾上盖它。那个主播一脚踢开之后，也不会有人替他盖回去。"},{"t":"nar","x":"可它现在是合着的。"},{"t":"nar","x":"就好像有人出门之前，顺手关了门。"},{"t":"nar","x":"我们推开棺材盖。里面空空荡荡。"},{"t":"nar","x":"道长弯下腰，屈起手指，在棺材底板上敲了敲。"},{"t":"nar","x":"咚。咚。"},{"t":"nar","x":"声音是空的。"},{"t":"nar","x":"我们合力把底板掀开。"},{"t":"nar","x":"底下，是一条往下延伸的石阶，黑洞洞的，看不见尽头。"},{"t":"nar","x":"石阶的尽头，是一道墓门。"},{"t":"nar","x":"道长让我们在墓门前点了三炷香。"},{"t":"say","s":"dao","x":"一敬山神，二敬土地，三敬无主孤魂。"},{"t":"say","s":"pang","x":"为什么？"},{"t":"say","s":"dao","x":"借路。"},{"t":"say","s":"pang","x":"要是他们不同意呢？"},{"t":"say","s":"dao","x":"那就先走着。"},{"t":"nar","x":"香插在门前的砖缝里，烧得很快。"},{"t":"nar","x":"烧到一半，道长的脸色变了。"},{"t":"nar","x":"左右两炷烧得飞快，中间那炷，几乎没动。"},{"t":"nar","x":"两短一长。"},{"t":"card","k":"incense"},{"t":"nar","x":"道长说，民间有句老话：人忌三长两短，香忌两短一长。"},{"t":"say","s":"me","x":"什么意思？"},{"t":"say","s":"dao","x":"意思是，要出事。"},{"t":"nar","x":"我们三个盯着那三炷香，谁都没说话。"},{"t":"say","s":"pang","x":"是不是两边有风？"},{"t":"nar","x":"道长举起手电，照了照墓门左右两条黑漆漆的岔道。"},{"t":"say","s":"dao","x":"……对，是风。走吧。"},{"t":"fx","w":"pre","scene":{"p":"古墓 墓道","tm":"02:00","bg":"tomb"}},{"t":"nar","x":"我们走进古墓。"},{"t":"nar","x":"墓道里阴冷潮湿，两侧刻着密密麻麻的符文。"},{"t":"nar","x":"越往深处走，空气越冷。"},{"t":"nar","x":"走了大概五十步，墙上出现了一块石牌，刻着八个字："},{"t":"stone","x":"库房重地，闲人免进。"},{"t":"say","s":"pang","x":"库房？墓里怎么会有库房？"},{"t":"nar","x":"道长想了想。"},{"t":"say","s":"dao","x":"这是古人对墓室的一种雅称。古人说话，比较委婉。"},{"t":"nar","x":"再往里，地上铺着一块块方砖，有的刻着花纹，有的没有。"},{"t":"nar","x":"道长蹲下来看了半天，又掏出手机，打开一个APP。"},{"t":"say","s":"dao","x":"奇门遁甲排盘，专业版，六块钱一个月。"},{"t":"nar","x":"他对着手机算了五分钟，郑重地说："},{"t":"say","s":"dao","x":"只能踩有花纹的。踩错一块，万箭穿心。"},{"t":"gate","k":"tiles","id":"g_tiles"},{"t":"nar","x":"话音刚落，胖子已经踩着没花纹的砖，一路走到了对面。"},{"t":"nar","x":"什么都没发生。"},{"t":"say","s":"pang","x":"你说什么？"},{"t":"nar","x":"道长沉默了一下。"},{"t":"say","s":"dao","x":"……机关年久失修。"},{"t":"fx","w":"post","ach":"tiles"},{"t":"nar","x":"墓道尽头的墙上，有一个小小的壁龛。"},{"t":"nar","x":"龛里放着一把算盘。乌木框子，算珠磨得锃亮，像是每天都有人在用。"},{"t":"nar","x":"胖子伸手拨了一下。"},{"t":"nar","x":"噼里啪啦。"},{"t":"nar","x":"声音在墓道里回荡了很久。"},{"t":"say","s":"dao","x":"墓主人生前，大概很爱算账。"},{"t":"fx","w":"pre","scene":{"p":"古墓 主墓室","tm":"02:30","bg":"tomb"}},{"t":"nar","x":"最后，我们来到一座巨大的地下墓室。"},{"t":"nar","x":"墓室中央有一口石棺，周围摆着七盏长明灯。"},{"t":"nar","x":"七盏灯，全都亮着。"},{"t":"nar","x":"三百年了，一盏都没有灭。"},{"t":"nar","x":"道长说，这说明墓主人怨气未散。"},{"t":"nar","x":"我却在想另一件事。"},{"t":"nar","x":"灯油是谁添的？"},{"t":"nar","x":"石棺后方有一道青铜门。"},{"t":"nar","x":"门上刻着八个大字："},{"t":"stone","x":"生人勿近，贪者必亡。"},{"t":"nar","x":"胖子念了一遍。"},{"t":"say","s":"pang","x":"道长，这什么意思？"},{"t":"say","s":"dao","x":"提醒我们注意安全。"},{"t":"say","s":"me","x":"你确定？"},{"t":"say","s":"dao","x":"古人比较喜欢夸张。"},{"t":"nar","x":"我记得他刚才还说，古人说话比较委婉。"},{"t":"gate","k":"slot","id":"g_slot"},{"t":"nar","x":"我们把玉佩放进青铜门中央的凹槽里。"},{"t":"nar","x":"只听轰隆一声。"},{"t":"fx","w":"post","shake":2},{"t":"fx","w":"post","item":"jade","v":2},{"t":"nar","x":"青铜门缓缓打开。"},{"t":"fx","w":"pre","scene":{"p":"宝库","tm":"02:40","bg":"gold"}},{"t":"nar","x":"门后出现了一座巨大的宝库。"},{"t":"nar","x":"金银珠宝堆积如山，玉器、铜钱、瓷器、古籍琳琅满目。"},{"t":"nar","x":"我们的手电筒照过去，整个墓室都闪耀着金光。"},{"t":"nar","x":"奇怪的是，这么多东西，没有一样是乱堆的。"},{"t":"nar","x":"金锭码成一排排的方阵，银锭用红绳十个一捆，每一堆前面都插着一块小木牌，写着编号：天字一号，天字二号，天字三号……"},{"t":"nar","x":"宝库最里面，是一整面墙的书架，上面摆满了线装的册子。"},{"t":"say","s":"me","x":"这墓主人有强迫症吧？"},{"t":"nar","x":"胖子跪了。"},{"t":"say","s":"pang","x":"发财了……"},{"t":"nar","x":"道长也跪了。"},{"t":"say","s":"dao","x":"祖师爷保佑……"},{"t":"nar","x":"我强忍住眼泪。"},{"t":"say","s":"me","x":"终于不用上班了……"},{"t":"nar","x":"那一刻，我脑子里已经写好了辞职信。"},{"t":"nar","x":"只有一句话："},{"t":"say","s":"me","x":"赵总，您先干着吧。"},{"t":"fx","w":"post","ach":"ganzhe"},{"t":"nar","x":"就在我们准备走进去的时候。"},{"t":"nar","x":"身后传来一阵沉重的脚步声。"},{"t":"nar","x":"咚。"},{"t":"fx","w":"post","shake":1},{"t":"nar","x":"咚。"},{"t":"fx","w":"post","shake":1},{"t":"nar","x":"咚。"},{"t":"fx","w":"post","shake":1},{"t":"nar","x":"僵尸来了。"},{"t":"nar","x":"它站在墓室入口，直勾勾地盯着我们。"},{"t":"nar","x":"我们三人僵在原地。"},{"t":"nar","x":"道长突然想起什么。"},{"t":"nar","x":"他翻开古籍，大声念道："},{"t":"say","s":"dao","x":"守陵之尸，非恶非邪，秉主人遗命，镇守千年。若欲破其执念，需以往生咒超度……"},{"t":"nar","x":"他猛地盘腿坐下，开始诵经。"},{"t":"say","s":"dao","x":"太上敕令，超汝孤魂，鬼魅一切，四生沾恩……"},{"t":"nar","x":"僵尸停住了。"},{"t":"nar","x":"它望着道长。"},{"t":"nar","x":"缓缓低下了头。"},{"t":"nar","x":"我们屏住呼吸。"},{"t":"nar","x":"难道真的有效？"},{"t":"nar","x":"紧接着，僵尸伸出手。"},{"t":"nar","x":"从道长手里拿走了手机。"},{"t":"nar","x":"道长正在用手机查《往生咒》全文。"},{"t":"nar","x":"僵尸低头看了一眼屏幕。"},{"t":"nar","x":"上面弹出一条广告。"},{"t":"card","k":"notify","app":"美团外卖","frm":"优惠提醒","msg":"您有一张满30减8优惠券即将过期。"},{"t":"nar","x":"僵尸看着广告。"},{"t":"nar","x":"又看了看我们。"},{"t":"nar","x":"突然，它张开嘴。"},{"t":"nar","x":"用极其嘶哑的声音，吐出了一个字。"},{"t":"say","s":"zom","x":"饿。"},{"t":"nar","x":"我们三人同时愣住。"},{"t":"nar","x":"胖子颤声问："},{"t":"say","s":"pang","x":"它……会说话？"},{"t":"nar","x":"僵尸缓缓地点头。"},{"t":"say","s":"zom","x":"饿……了……"},{"t":"nar","x":"我试探着问："},{"t":"say","s":"me","x":"你想吃什么？"},{"t":"nar","x":"它沉默了一会儿。"},{"t":"say","s":"zom","x":"饭。"},{"t":"choice","id":"c_food","q":"它说它饿了。你要给它什么？","o":[{"l":"保温饭盒里的糯米饭","r":[]},{"l":"胖子的炸鸡","r":[{"t":"nar","x":"胖子死死护住了炸鸡全家桶。"}]},{"l":"二十斤生糯米","r":[{"t":"say","s":"dao","x":"生的你也敢给？"}],"ach":"raw"}]},{"t":"nar","x":"我想了想。"},{"t":"nar","x":"从背包里掏出一个保温饭盒。"},{"t":"nar","x":"打开盖子。"},{"t":"nar","x":"里面是一盒刚买的糯米饭。"},{"t":"nar","x":"道长脸色大变。"},{"t":"say","s":"dao","x":"别！糯米克僵尸！"},{"t":"nar","x":"我已经来不及收手了。"},{"t":"nar","x":"饭盒递到了僵尸面前。"},{"t":"nar","x":"僵尸低下头。"},{"t":"nar","x":"盯着糯米饭。"},{"t":"nar","x":"它伸出一只手。"},{"t":"nar","x":"抓起一把。"},{"t":"nar","x":"塞进嘴里。"},{"t":"nar","x":"嚼了嚼。"},{"t":"nar","x":"然后它浑身剧烈颤抖。"},{"t":"nar","x":"我们三人同时后退。"},{"t":"nar","x":"道长大喊："},{"t":"say","s":"dao","x":"快退！尸气要爆发了！"},{"t":"nar","x":"僵尸忽然张开嘴。"},{"t":"nar","x":"发出一声震耳欲聋的咆哮。"},{"t":"say","s":"zom","x":"烫！！！"},{"t":"fx","w":"post","shake":3},{"t":"fx","w":"post","item":"box","v":2},{"t":"nar","x":"它一口将糯米吐了出来。"},{"t":"nar","x":"抱着嘴，满墓室乱跳。"},{"t":"nar","x":"胖子看向我。"},{"t":"nar","x":"我看向道长。"},{"t":"nar","x":"道长看向僵尸。"},{"t":"nar","x":"大家都沉默了。"},{"t":"nar","x":"过了很久，胖子终于开口。"},{"t":"say","s":"pang","x":"你们有没有想过……"},{"t":"say","s":"me","x":"什么？"},{"t":"say","s":"pang","x":"糯米可能根本不克僵尸。"},{"t":"nar","x":"道长缓缓放下桃木剑。"},{"t":"nar","x":"胖子继续说："},{"t":"say","s":"pang","x":"它就是怕烫。"},{"t":"fx","w":"post","ach":"hot"},{"t":"act","n":"第五幕","name":"祖师爷没有教过的事情"},{"t":"nar","x":"僵尸蹲在地上，嘴里冒着白气。"},{"t":"nar","x":"我们三人围着它。"},{"t":"nar","x":"现场气氛十分尴尬。"},{"t":"gate","k":"give","id":"g_give"},{"t":"nar","x":"我想了想，从胖子的外卖袋里摸出一瓶可乐，拧开，递了过去。"},{"t":"say","s":"pang","x":"那是我的可乐！"},{"t":"nar","x":"山里夜凉，可乐还是冰的。"},{"t":"nar","x":"僵尸接过瓶子，看了看，仰头灌了一大口。"},{"t":"nar","x":"然后，它整个人——整具尸体——僵住了。"},{"t":"nar","x":"过了很久，它打了一个长长的嗝。"},{"t":"nar","x":"一股三百年的陈腐之气，混着可乐的甜味，在墓室里弥漫开来。"},{"t":"nar","x":"它低头看着手里的瓶子，眼睛里第一次有了光。"},{"t":"say","s":"zom","x":"好……喝……"},{"t":"fx","w":"post","ach":"cola"},{"t":"fx","w":"post","item":"takeout","v":2},{"t":"nar","x":"现场气氛更尴尬了。"},{"t":"nar","x":"它就那么蹲在地上，抱着可乐，低着头，一只手缩在袖子里，不知道在鼓捣什么。"},{"t":"nar","x":"我说："},{"t":"say","s":"me","x":"那现在怎么办？"},{"t":"nar","x":"道长说："},{"t":"say","s":"dao","x":"问问它。"},{"t":"nar","x":"胖子说："},{"t":"say","s":"pang","x":"问什么？"},{"t":"say","s":"dao","x":"问它到底想干什么。"},{"t":"nar","x":"于是我蹲下来。"},{"t":"say","s":"me","x":"这位……老先生。"},{"t":"nar","x":"僵尸抬起头。"},{"t":"say","s":"me","x":"您今年贵庚？"},{"t":"nar","x":"它思考了半天。"},{"t":"say","s":"zom","x":"三……百……二……"},{"t":"say","s":"me","x":"三百二十岁？"},{"t":"nar","x":"它点头。"},{"t":"say","s":"me","x":"您叫什么名字？"},{"t":"say","s":"zom","x":"陈……守……财……"},{"t":"fx","w":"post","name":["zom","陈守财"]},{"t":"say","s":"pang","x":"这名字，一听就是管钱的。"},{"t":"say","s":"me","x":"您为什么一直追我们？"},{"t":"nar","x":"它抬起手，指着那扇青铜门。"},{"t":"say","s":"zom","x":"钱。"},{"t":"nar","x":"我们立刻警惕起来。"},{"t":"nar","x":"胖子抱紧背包。"},{"t":"say","s":"pang","x":"什么意思？你想独吞？"},{"t":"nar","x":"僵尸摇头。"},{"t":"say","s":"zom","x":"我……的……"},{"t":"say","s":"me","x":"那天晚上，你为什么咬胖子？"},{"t":"nar","x":"陈守财抬起手，指了指胖子的脖子。"},{"t":"say","s":"zom","x":"他……拿……玉……"},{"t":"say","s":"me","x":"那你这些年，一共咬过多少人？"},{"t":"nar","x":"它伸出手指，一根一根地数。"},{"t":"nar","x":"数完一只手，换另一只手。"},{"t":"nar","x":"数完两只手，又从头数了一遍。"},{"t":"nar","x":"一共数了三遍，又多数了七根。"},{"t":"say","s":"zom","x":"三……十……七……"},{"t":"say","s":"dao","x":"县志上的三十七个！"},{"t":"nar","x":"陈守财摇摇头。"},{"t":"say","s":"zom","x":"没……死……"},{"t":"say","s":"zom","x":"都……跑……了……"},{"t":"nar","x":"然后它指了指胖子。"},{"t":"say","s":"zom","x":"他……第……三……十……八……"},{"t":"fx","w":"post","ach":"n38"},{"t":"say","s":"pang","x":"我还排上号了？"},{"t":"say","s":"dao","x":"三十八。这个数，跟我有缘。"},{"t":"nar","x":"我转头看着道长。"},{"t":"say","s":"me","x":"县志上写的是‘伤’，你翻译成了‘死’。"},{"t":"say","s":"dao","x":"古人比较喜欢夸张。"},{"t":"say","s":"me","x":"这回夸张的是你。"},{"t":"nar","x":"陈守财抬起手，指了指宝库最里面那一整面书架。"},{"t":"nar","x":"道长走过去，抽出了最上面的一本。"},{"t":"nar","x":"封皮上写着：库房总账，卷一。"},{"t":"nar","x":"道长捧着账本，仔细翻阅。"},{"t":"nar","x":"半晌后，他忽然一拍大腿。"},{"t":"say","s":"dao","x":"我明白了！"},{"t":"nar","x":"原来陈守财生前不是墓主人。"},{"t":"nar","x":"他是墓主人的账房先生。"},{"t":"nar","x":"墓主人是个富甲一方的大盐商，死前担心后人败光家产，便把金银财宝藏进山中。"},{"t":"nar","x":"陈守财奉命守墓。"},{"t":"nar","x":"但是他实在太敬业了。"},{"t":"nar","x":"死后三百多年，依然没有下班。"},{"t":"nar","x":"我终于知道，那七盏长明灯是谁在添油了。"},{"t":"nar","x":"也终于知道，墓道里那把算盘，为什么磨得那么亮。"},{"t":"nar","x":"道长又从笔记本里抽出那天晚上捡回来的七张黄符，在地上重新排了一遍。"},{"t":"nar","x":"七张符，每张上面写着一个字。"},{"t":"nar","x":"那天晚上，他把它们认成了镇煞咒。"},{"t":"nar","x":"现在按顺序一排，是一句话："},{"t":"card","k":"fu7"},{"t":"say","s":"me","x":"这就是你说的七星镇煞棺？"},{"t":"say","s":"dao","x":"古人写字比较草。"},{"t":"nar","x":"所以那口棺材根本不是什么镇煞棺。"},{"t":"nar","x":"是门卫室。"},{"t":"fx","w":"post","item":"fu7","v":2},{"t":"nar","x":"我们三个，半夜刨开了人家的门卫室，掀了人家的被子，还往人家脑门上贴了一张符。"},{"t":"nar","x":"换我，我也咬。"},{"t":"nar","x":"账本第一页，是几行工工整整的小楷。道长一字一句地念了出来："},{"t":"led","x":"康熙四十五年，丙戌，三月初九。东家胡公命余守库。"},{"t":"led","x":"余问：工钱几何？"},{"t":"led","x":"东家曰：先干着。"},{"t":"nar","x":"我愣了一下。"},{"t":"nar","x":"这三个字，我太熟悉了。"},{"t":"nar","x":"赵总每周例会都要说一遍。"},{"t":"nar","x":"道长接着往下念："},{"t":"led","x":"东家又曰：好生看守，日后此库，尽归于汝。"},{"t":"led","x":"余大喜，遂应之。"},{"t":"led","x":"是夜，东家延一道人，行秘法于余身。自此，余不饥，不渴，不眠，不死。"},{"t":"say","s":"pang","x":"不吃饭，不喝水，不睡觉，还死不了……"},{"t":"say","s":"me","x":"这是每个老板梦寐以求的员工。"},{"t":"nar","x":"道长翻开第二本。"},{"t":"led","x":"雍正三年，少爷来，欲取库银。东家遗命：少爷浪子回头，方可交付。余观少爷，未回头，不予。少爷骂余，去。"},{"t":"nar","x":"第三本。"},{"t":"led","x":"乾隆五年，少爷复来。余观之，仍未回头，不予。少爷又骂余，去。"},{"t":"nar","x":"第四本。"},{"t":"led","x":"乾隆二十一年，少爷未来。闻少爷殁于赌坊。"},{"t":"led","x":"余仍守之。东家未尝命余停。"},{"t":"nar","x":"道长又抽了几本。"},{"t":"nar","x":"乾隆，嘉庆，道光，咸丰，同治，光绪。"},{"t":"nar","x":"每一本，每一页，每一天，写的都是同一句话："},{"t":"nar","x":"盘点，无误。"},{"t":"led","x":"宣统三年，八月。外头甚吵，闻改朝换代。与余无干。盘点，无误。"},{"t":"nar","x":"从那以后，账本上就再也没有年号了。"},{"t":"nar","x":"陈守财开始按天数记账：守库第几万几千几百日。"},{"t":"nar","x":"大概是因为没有皇帝了，他不知道该用谁的年号。"},{"t":"nar","x":"再往后翻，有一页写着："},{"t":"led","x":"守库第九万四千二百一十一日。山下夜有灯火，彻夜不熄，不知何物。盘点，无误。"},{"t":"nar","x":"合上账本，道长感叹："},{"t":"say","s":"dao","x":"这是什么精神？"},{"t":"nar","x":"我说："},{"t":"say","s":"me","x":"资本主义精神。"},{"t":"nar","x":"胖子说："},{"t":"say","s":"pang","x":"这得算多少年加班费？"},{"t":"nar","x":"道长掐指一算。"},{"t":"say","s":"dao","x":"按现在的劳动法……"},{"t":"nar","x":"指头不够用，他又掏出手机按计算器。"},{"t":"nar","x":"三百二十年，一天十二个时辰，全年无休。平时延长工作时间按一点五倍，休息日两倍，法定节假日三倍……"},{"t":"nar","x":"计算器上的数字越来越长，最后屏幕都装不下了。"},{"t":"card","k":"calc"},{"t":"nar","x":"他算了半天。"},{"t":"say","s":"dao","x":"这墓主人可能得破产。"},{"t":"say","s":"pang","x":"还没算社保。"},{"t":"say","s":"dao","x":"算上社保滞纳金，青龙山都得赔给他。"},{"t":"nar","x":"我问陈守财："},{"t":"say","s":"me","x":"你东家当年，到底是怎么跟你说的？"},{"t":"nar","x":"陈守财低着头，想了很久。"},{"t":"say","s":"zom","x":"好……好……干……"},{"t":"say","s":"zom","x":"以……后……这……些……都……是……你……的……"},{"t":"nar","x":"墓室里安静了。"},{"t":"say","s":"me","x":"我们老板也这么说过。"},{"t":"say","s":"pang","x":"我以前在工地搬砖，包工头也这么说过。"},{"t":"say","s":"dao","x":"我师父也这么说过。他说，好好干，以后这个道观就是你的。"},{"t":"say","s":"pang","x":"后来呢？"},{"t":"say","s":"dao","x":"后来道观拆了，盖了个停车场。"},{"t":"nar","x":"三个人，加一具尸体，谁都没有再说话。"},{"t":"nar","x":"过了一会儿，陈守财从袖子里摸出一本巴掌大的小册子，双手递给道长。"},{"t":"nar","x":"像是在交一份工作汇报。"},{"t":"say","s":"zom","x":"这……是……近……日……的……"},{"t":"nar","x":"小册子的封皮上写着两个字：流水。"},{"t":"fx","w":"post","item":"ledger"},{"t":"nar","x":"道长翻开，借着手电的光念了起来。"},{"t":"led","x":"守库第十一万六千八百六十九日。夜，有贼三人掘地，启余门户。一贼贴符于余额上。"},{"t":"nar","x":"道长咳嗽了一声。"},{"t":"led","x":"一胖贼探手入棺，取镇魂玉。余啮之。"},{"t":"nar","x":"胖子摸了摸脖子上的纱布。"},{"t":"led","x":"三贼遁走，其一足陷铁夹，号叫甚哀，遗履一只。余追之，贼乘铁车，其疾如风，余不能及。归，掩门，歇息。"},{"t":"nar","x":"掩门。"},{"t":"nar","x":"我终于知道，那口棺材的盖子是谁合上的了。"},{"t":"led","x":"守库第十一万六千八百七十二日。夜，余巡山归，见一人对一发光小镜高呼‘家人们’，且踢余门。余拍其肩，欲告之勿踢。其人大骇，弃镜而走。"},{"t":"led","x":"镜中有字，自下而上，飞过不绝，皆曰‘主播后面有人’。"},{"t":"led","x":"余即人也。"},{"t":"fx","w":"post","ach":"yu"},{"t":"led","x":"余以指触镜，镜中忽现一铺，售手电、喷雾、护身符。不解。"},{"t":"led","x":"守库第十一万六千八百七十三日。玉气渐远，余循之入城。城中车皆铁铸，不驾马而自行，其声如雷。路远，行一日一夜。"},{"t":"led","x":"守库第十一万六千八百七十四日。玉气止于一地窖，窖中停铁车数百。贼已去，余候之。"},{"t":"led","x":"入夜，欲出窖，一老卒拦余索钱。余予以康熙通宝，不受。又示余一方块，曰‘扫码’。余触之，不应。"},{"t":"led","x":"贼三人复至。道人又贴符于余额上。余见窖中铁车，额上多贴纸条，以为此地风俗，遂从之。"},{"t":"nar","x":"道长的表情有点复杂。"},{"t":"led","x":"胖贼身上玉气甚浓，余追之。贼入梯道。余见一铁屋，人入其中，门合，复开，已至他层。妙甚。余亦入之。有妇人抱子，余让其先。"},{"t":"led","x":"贼匿一小室，以朱砂涂门。余叩之，不应。余不敢擅入。"},{"t":"nar","x":"道长一直以为，是他那道朱砂符挡住了僵尸。"},{"t":"nar","x":"原来人家只是不好意思硬闯。"},{"t":"led","x":"天将晓，楼下乐声大作。妇人数十，列队而舞。其舞也，双臂前伸，蹦跳而行，与余无异。一妇招余，余从之。"},{"t":"led","x":"妇赞余曰：‘后排新来的，动作标准。’"},{"t":"nar","x":"道长念到这里，停了一下。"},{"t":"nar","x":"下一行，只有一句话。"},{"t":"led","x":"三百二十年，未尝有人赞余。"},{"t":"gate","k":"praise","id":"g_praise"},{"t":"nar","x":"墓室里很安静。"},{"t":"nar","x":"长明灯的火苗，轻轻晃了一下。"},{"t":"nar","x":"道长清了清嗓子，接着往下念。"},{"t":"led","x":"日将出，余避于铁车之下。车行，余随之。车甚颠。"},{"t":"nar","x":"我想起这两天，车底一路“咚、咚”的声音。"},{"t":"nar","x":"我一直以为，是底盘松了。"},{"t":"led","x":"铁车停于陋巷，凡两日。贼居楼上，余不敢擅入。有猫数只，与余对视良久。"},{"t":"led","x":"复行，至山。贼入库，跪于宝前。余随之。"},{"t":"led","x":"一贼诵经。余观其镜，镜中有字，曰‘满三十减八’。不解。"},{"t":"led","x":"忽觉腹饥。三百二十年，未尝知饥。今日方知。"},{"t":"led","x":"一贼以糯米饭饲余。烫。"},{"t":"led","x":"一贼以黑水一瓶饲余。其色如墨，其味甚甘，其气冲鼻，饮之，喉中大快。"},{"t":"led","x":"今日记。"},{"t":"nar","x":"最后几行字，墨迹还没干。"},{"t":"nar","x":"原来它刚才蹲在地上，一只手缩在袖子里，不是在疼。"},{"t":"nar","x":"是在记账。"},{"t":"nar","x":"我们三个面面相觑。"},{"t":"nar","x":"原来在它眼里，我们是三个贼。"},{"t":"nar","x":"它说得没错。"},{"t":"nar","x":"陈守财突然抬起头。"},{"t":"say","s":"zom","x":"累……了……"},{"t":"nar","x":"我们愣住了。"},{"t":"nar","x":"它又说了一遍。"},{"t":"say","s":"zom","x":"我……累……了……不……想……干……了……"},{"t":"nar","x":"我望着这具穿着清朝官服的僵尸。"},{"t":"nar","x":"忽然有些同情。"},{"t":"nar","x":"三百二十年。"},{"t":"nar","x":"没有工资，没有社保，没有年假。"},{"t":"nar","x":"连双休都没有。"},{"t":"nar","x":"更没有劳动仲裁。"},{"t":"nar","x":"这哪是什么僵尸。"},{"t":"nar","x":"这分明是中国历史上最惨的打工人。"},{"t":"nar","x":"我想起凌晨一点的那条钉钉。"},{"t":"nar","x":"想起我工位上那盆早就枯死的绿萝。"},{"t":"nar","x":"想起我已经两年没回过老家。"},{"t":"nar","x":"想起赵总在年会上举着酒杯说：“公司就是家。”"},{"t":"nar","x":"我忽然明白了。"},{"t":"nar","x":"陈守财不是被什么秘术炼成僵尸的。"},{"t":"nar","x":"他是被一句“先干着”，炼成僵尸的。"},{"t":"say","s":"me","x":"我好像能理解他。"},{"t":"nar","x":"道长看了我一眼。"},{"t":"say","s":"dao","x":"你当然能理解。他是被人炼成这样的。你是自己练成这样的。"},{"t":"nar","x":"说完，道长也沉默了。"},{"t":"nar","x":"他从怀里掏出一张黄色符纸。"},{"t":"nar","x":"在上面写下几个字。"},{"t":"nar","x":"解除劳动关系证明书。"},{"t":"nar","x":"写完标题，他顿了顿，又蘸了蘸朱砂，接着往下写。"},{"t":"nar","x":"他写得很慢，一笔一画。"},{"t":"nar","x":"那是我认识他以来，他画得最认真的一张符。"},{"t":"card","k":"cert","lines":["兹证明：","陈守财，男，籍贯不详，现年三百二十岁。自康熙四十五年三月初九起，受雇于胡氏，任账房兼守库一职，至今三百二十年，全年无休，账目无误。","因用人单位胡氏早已家道中落、后继无人，用人单位已不复存在，双方劳动关系依法自动终止。","自即日起，陈守财不再承担守库、守墓、看门、巡山、值夜等一切义务。","所欠工资、加班费及社会保险，因用人单位无力承担，由天地代为记账。","特此证明。","证明单位：青龙山传统民俗文化咨询有限公司（筹）","经办人：玄微子","太上老君急急如律令"]},{"t":"nar","x":"写完，他吹了吹未干的朱砂。"},{"t":"gate","k":"stamp","id":"g_stamp"},{"t":"nar","x":"然后郑重地盖上了自己的道观印章。"},{"t":"fx","w":"post","ach":"stamp"},{"t":"fx","w":"post","item":"cert"},{"t":"nar","x":"印章是淘宝上刻的，十五块钱，刻着“玄微观”三个字。"},{"t":"nar","x":"这是道长全身上下，唯一一件没用花呗买的东西。"},{"t":"say","s":"dao","x":"陈先生，经本公司审核，您的劳动合同已于三百年前自动终止。从即日起，您不再承担任何守墓义务。"},{"t":"nar","x":"陈守财接过符纸。"},{"t":"fx","w":"post","item":"cert","v":2},{"t":"nar","x":"低头看了很久。"},{"t":"say","s":"zom","x":"真……的？"},{"t":"say","s":"dao","x":"真的。"},{"t":"say","s":"zom","x":"可……以……走？"},{"t":"say","s":"dao","x":"可以。"},{"t":"nar","x":"陈守财缓缓站起。"},{"t":"nar","x":"但他没有马上走。"},{"t":"nar","x":"他走到书架前，抽出最新的一本总账，翻到最后一页，从袖子里摸出一支秃了毛的毛笔，舔了舔笔尖，写了很久。"},{"t":"nar","x":"写完，他把账本递给我，指了指末尾的空白处。"},{"t":"nar","x":"那是一份交接清单。"},{"t":"nar","x":"黄金一千三百二十七锭。白银四千零八锭。玉器三百一十二件。瓷器九十六件。铜钱八十二万六千四百文。"},{"t":"nar","x":"最底下一行：交接人，陈守财。接收人，空着。"},{"t":"nar","x":"他又指了指那片空白。"},{"t":"nar","x":"我明白了。"},{"t":"nar","x":"他要我签字。"},{"t":"gate","k":"sign","id":"g_sign"},{"t":"nar","x":"我签了。"},{"t":"nar","x":"道长签了。"},{"t":"nar","x":"胖子也签了。签完，顺手把一锭金子往兜里塞。"},{"t":"nar","x":"陈守财的脑袋“咔”地一声转了过来。"},{"t":"say","s":"zom","x":"放……下……"},{"t":"nar","x":"三百二十年的老账房，眼睛比监控还毒。"},{"t":"nar","x":"胖子乖乖放了回去。"},{"t":"nar","x":"陈守财在清单最后，又慢慢写下一行字。"},{"t":"nar","x":"前面三百二十年的账，用的都是繁体字。"},{"t":"nar","x":"这一行，用的是简体。"},{"t":"nar","x":"是他这几天，在那个主播的手机上学的。"},{"t":"led","x":"交接完毕。从此下班。陈守财。","v":"simp"},{"t":"nar","x":"他看了一眼身后堆积如山的金银珠宝。"},{"t":"nar","x":"然后看了一眼我们。"},{"t":"nar","x":"突然，他笑了。"},{"t":"nar","x":"那是一种极其僵硬、极其恐怖的笑容。"},{"t":"nar","x":"两颗黑黄的獠牙露在嘴外。"},{"t":"nar","x":"胖子吓得缩到我身后。"},{"t":"nar","x":"但我知道。"},{"t":"nar","x":"那是一个终于下班的人，发自内心的笑容。"},{"t":"fx","w":"post","ach":"offwork"},{"t":"nar","x":"他朝我们深深鞠了一躬。"},{"t":"nar","x":"然后一步一步，走出了古墓。"},{"t":"nar","x":"消失在黎明前的山雾里。"},{"t":"nar","x":"我这才反应过来。"},{"t":"nar","x":"他是走出去的。"},{"t":"nar","x":"一步一步，没有跳。"},{"t":"nar","x":"道长说，僵尸之所以跳，是因为尸僵，关节打不了弯。"},{"t":"nar","x":"我觉得不是。"},{"t":"nar","x":"我觉得他就是值班值太久了，腿麻了。"},{"t":"nar","x":"三百二十年，换谁都得腿麻。"},{"t":"nar","x":"现在下班了，腿也就好了。"},{"t":"nar","x":"我们三人站在宝库前。"},{"t":"nar","x":"面面相觑。"},{"t":"nar","x":"胖子率先开口。"},{"t":"say","s":"pang","x":"所以现在这些东西……"},{"t":"nar","x":"道长说："},{"t":"say","s":"dao","x":"理论上，是无主之物。"},{"t":"nar","x":"我说："},{"t":"say","s":"me","x":"法律上，它们是国家文物。"},{"t":"nar","x":"地底下挖出来的文物，都归国家。这一条，我在普法短视频里刷到过不下十次。"},{"t":"nar","x":"三人陷入了沉默。"},{"t":"nar","x":"片刻后。"},{"t":"nar","x":"胖子缓缓拿出手机。"},{"t":"say","s":"pang","x":"那……要不报警？"},{"t":"nar","x":"道长叹了口气，没有说话。"},{"t":"nar","x":"我说："},{"t":"say","s":"me","x":"那咱们盗墓的事情怎么办？"},{"t":"nar","x":"道长看向我。"},{"t":"say","s":"dao","x":"你觉得公安机关会相信我们是来给一具僵尸办离职手续的吗？"},{"t":"nar","x":"我说："},{"t":"say","s":"me","x":"也是。"},{"t":"nar","x":"胖子的手指悬在屏幕上，按也不是，不按也不是。"},{"t":"nar","x":"报，还是不报。"},{"t":"nar","x":"我们三个谁都拿不定主意。"},{"t":"nar","x":"就在这时，头顶上隐隐约约传来一阵警笛声。"},{"t":"fx","w":"post","shake":1},{"t":"nar","x":"由远及近。"},{"t":"nar","x":"最后，停在了我们正上方。"},{"t":"nar","x":"胖子低头看了看手机。"},{"t":"nar","x":"他一个号都还没按。"},{"t":"nar","x":"谁都没有碰里面的金银财宝。"},{"t":"nar","x":"因为经过这一系列事情，我们终于明白了一个道理。"},{"t":"nar","x":"贪婪是万恶之源。"},{"t":"nar","x":"当然，还有一个更加现实的原因。"},{"t":"nar","x":"墓门口停着一辆警车。"},{"t":"nar","x":"那位失踪的探险主播，早在三天前就已经报警了。"},{"t":"nar","x":"直播中断之后，铁头就“失踪”了——至少他的粉丝是这么以为的。"},{"t":"nar","x":"实际上，他连夜跑下山，在派出所门口的台阶上坐到了天亮。"},{"t":"nar","x":"警察本来不信什么僵尸。"},{"t":"nar","x":"但他们上山一看，确实有个刚刨开的盗洞，洞边的捕兽夹里，还卡着一只运动鞋。"},{"t":"nar","x":"于是他们在山脚下蹲了三天。"},{"t":"fx","w":"pre","scene":{"p":"墓门口","tm":"黎明","bg":"dawn"}},{"t":"nar","x":"我们沿着石阶爬出地面的时候，天刚蒙蒙亮。"},{"t":"nar","x":"车门打开，下来两个民警。后面跟着一个裹着军大衣的年轻人，正是铁头。"},{"t":"say","s":"tie","x":"就是他们！还有一个穿清朝官服的！"},{"t":"say","s":"zhao","x":"穿官服的呢？"},{"t":"nar","x":"我们三个一起回头，看向身后的山雾。"},{"t":"say","s":"trio","x":"下班了。"},{"t":"nar","x":"年轻的民警挠了挠头，小声对同事说："},{"t":"say","s":"jing","x":"是不是刚才上山路上碰见那个？穿戏服的，还冲咱们挥了挥手。"},{"t":"say","s":"jing","x":"我还以为是影视基地下班的群演。"},{"t":"nar","x":"年长的民警没接话。"},{"t":"nar","x":"他从车里拎出一个证物袋，袋子里装着一只运动鞋。"},{"t":"say","s":"zhao","x":"这只鞋，是谁的？"},{"t":"nar","x":"道长低头，看了看自己左脚上的棉拖鞋。"},{"t":"nar","x":"沉默了很久。"},{"t":"say","s":"dao","x":"警察同志，能先让我穿上吗？山上冷。"},{"t":"nar","x":"那是我这辈子见过的，最像灰姑娘的一次落网。"},{"t":"fx","w":"post","ach":"cinderella"},{"t":"fx","w":"pre","scene":{"p":"下山的警车","tm":"清晨","bg":"police"}},{"t":"nar","x":"天亮的时候，警车载着我们，沿着盘山路往下开。"},{"t":"nar","x":"道长靠着车窗，忽然开口。"},{"t":"say","s":"dao","x":"我年轻的时候，在山上的道观里待过三年。"},{"t":"nar","x":"我和胖子都看着他。"},{"t":"say","s":"dao","x":"不是修道。是烧火。给道观的食堂烧火做饭。"},{"t":"nar","x":"他说，他师父是个很老的道士，一辈子没怎么下过山。"},{"t":"nar","x":"师父教他的第一句话是："},{"t":"say","s":"shifu","x":"符这个东西，不是画给鬼看的，是画给人看的。"},{"t":"say","s":"dao","x":"那鬼看什么？"},{"t":"say","s":"shifu","x":"鬼什么都不看。鬼，就是没人管的人。"},{"t":"nar","x":"道长说，这句话他记了二十年。"},{"t":"nar","x":"今天才第一次用上。"},{"t":"act","n":"尾声","name":"人间烟火"},{"t":"nar","x":"三个月后。"},{"t":"fx","w":"post","scene":{"p":"三个月后","tm":"","bg":"police"}},{"t":"nar","x":"我们三人因为非法盗掘古墓，接受了法律的制裁。"},{"t":"nar","x":"所幸墓中文物并未遭到进一步破坏，我们主动配合调查，具体责任依法处理。"},{"t":"fx","w":"pre","scene":{"p":"派出所","tm":"","bg":"police"}},{"t":"nar","x":"做笔录的时候，负责我的是那位年长的民警，姓赵。"},{"t":"nar","x":"我说，我们老板也姓赵。"},{"t":"nar","x":"他说，那我尽量对你好一点。"},{"t":"nar","x":"他问得很仔细。"},{"t":"say","s":"zhao","x":"为什么去青龙山？"},{"t":"say","s":"me","x":"寻宝。"},{"t":"say","s":"zhao","x":"为什么又回去？"},{"t":"say","s":"me","x":"还东西。"},{"t":"say","s":"zhao","x":"还给谁？"},{"t":"say","s":"me","x":"僵尸。"},{"t":"nar","x":"赵警官的笔停了一下，又接着写。"},{"t":"say","s":"zhao","x":"为什么带二十斤糯米？"},{"t":"say","s":"me","x":"防身。"},{"t":"say","s":"zhao","x":"为什么带半桶毛肚？"},{"t":"say","s":"me","x":"那是黑狗血。"},{"t":"say","s":"zhao","x":"里面有毛肚。"},{"t":"say","s":"me","x":"……那是法器。"},{"t":"fx","w":"post","ach":"faqi"},{"t":"nar","x":"赵警官放下笔，看了我很久。"},{"t":"say","s":"zhao","x":"我干了三十年警察，你们这份笔录，是我写过最长的一份。"},{"t":"nar","x":"他还告诉我一件事。"},{"t":"nar","x":"那天夜里，他们在山脚下已经蹲到了第三天，几个人都快熬不住了，差点睡着。"},{"t":"nar","x":"是一个外卖小哥在山上喊了二十分钟“王建国”，把他们喊醒的。"},{"t":"nar","x":"后来，警方调取了小区地下车库的监控。"},{"t":"nar","x":"画面里，一个穿清朝官服的男子，在电梯口礼让了一位抱孩子的业主，然后按下了开门键。"},{"t":"nar","x":"赵警官把那段监控看了三遍。"},{"t":"nar","x":"最后，他在报告上写道："},{"t":"paper","x":"不明身份男子一名，着清代服饰，疑为附近影视基地群众演员。"},{"t":"nar","x":"这位群众演员，至今下落不明。"},{"t":"nar","x":"青龙山的那座宝库，后来被正式命名为“青龙山清代窖藏”。"},{"t":"nar","x":"省里来了一车考古专家，说这是近年来本省最重要的考古发现之一。"},{"t":"nar","x":"但专家们最感兴趣的，不是金银。"},{"t":"nar","x":"是那一整面墙的账本。"},{"t":"nar","x":"三百二十年，一天不落。"},{"t":"nar","x":"每一页，都写着同一句话："},{"t":"nar","x":"盘点，无误。"},{"t":"nar","x":"一位头发花白的老专家，捧着账本看了一下午，最后只说了一句："},{"t":"say","s":"exp","x":"这是我见过最敬业的古人。"},{"t":"nar","x":"只有最后一页，让专家们争论了很久。"},{"t":"nar","x":"那一页是一份交接清单，清单下面有三个现代人的签名。"},{"t":"nar","x":"经核实，是我们三个的。"},{"t":"nar","x":"这份清单，后来成了我们案子里的一份重要证据。"},{"t":"nar","x":"清单的最后一行，字迹歪歪扭扭，用的是简体字："},{"t":"led","x":"交接完毕。从此下班。陈守财。","v":"simp"},{"t":"nar","x":"专家们研究了很久，也没想明白，一套从康熙年间开始记的账本，最后一行为什么会是简体字。"},{"t":"nar","x":"鉴定结论：存疑。"},{"t":"nar","x":"张道长的驱鬼公司也关门了。"},{"t":"nar","x":"营业执照批下来的第二天，我们就被带走了。"},{"t":"nar","x":"后来，他改行做了民俗文化科普博主。"},{"t":"nar","x":"账号叫："},{"t":"nar","x":"玄微子讲科学。"},{"t":"nar","x":"他的视频主要讲解如何识别封建迷信、避免网络诈骗，以及为什么不能用刚煮熟的糯米驱邪。"},{"t":"nar","x":"粉丝数量突破两百万。"},{"t":"nar","x":"他最火的一条视频底下，有人在评论区问：这个世界上，到底有没有僵尸？"},{"t":"nar","x":"他认真地回复："},{"t":"say","s":"dao","x":"有。每天早上七点半，你去地铁站看看。"},{"t":"nar","x":"他用第一笔广告费，还清了花呗。"},{"t":"fx","w":"post","hbset":0,"note":"还清了"},{"t":"nar","x":"第二天，又开通了白条。"},{"t":"fx","w":"post","hblabel":"白条已开通"},{"t":"nar","x":"他说，修道之人，也得与时俱进。"},{"t":"nar","x":"胖子因为烫伤，在医院住了半个月。"},{"t":"fx","w":"post","hpset":100,"note":"住院半个月"},{"t":"nar","x":"上回在急诊室，他嫌住院贵，跑了。这回伤口感染，没跑掉。"},{"t":"nar","x":"直到现在，他看见糯米都会条件反射地后退两步。"},{"t":"nar","x":"包括粽子、汤圆、驴打滚和八宝饭。"},{"t":"nar","x":"端午节，他妈给他寄了一箱粽子。他隔着快递箱，都在发抖。"},{"t":"nar","x":"他的搬家公司重新开张了。"},{"t":"nar","x":"店门口贴着一张告示："},{"t":"nar","x":"本公司不搬棺材。"},{"t":"nar","x":"还有一些后来的事。"},{"t":"nar","x":"那张贴在奔驰挡风玻璃上的黄符，被车主装裱了起来，挂在客厅里。他说，自从贴了那张符，他的车再也没被贴过罚单。"},{"t":"nar","x":"孙总的青龙御府二期，开盘当天就卖掉了八成。"},{"t":"nar","x":"刘阿姨的广场舞队，至今在最后一排给那位“新来的老师傅”留着一个位置。"},{"t":"nar","x":"左数第三个。"},{"t":"nar","x":"至于我。"},{"t":"nar","x":"原来的公司，在我被带走的当天下午，就在钉钉上通知我：鉴于你严重违反公司规章制度，即日起解除劳动合同。"},{"t":"nar","x":"我坐在派出所的长椅上等着做笔录，看到这条消息，手指自己动了起来，回了两个字："},{"t":"say","s":"me","x":"收到。"},{"t":"nar","x":"同样是解除劳动关系。"},{"t":"nar","x":"陈守财的那张，写在黄符纸上，盖着道观的章，写着“由天地代为记账”。"},{"t":"nar","x":"我的这张，是一条钉钉消息，连句“辛苦了”都没有。"},{"t":"nar","x":"后来，我重新找了份工作。"},{"t":"nar","x":"每天早上九点上班，晚上六点下班。"},{"t":"nar","x":"生活终于恢复了正常。"},{"t":"nar","x":"至少，合同上是这么写的。"},{"t":"nar","x":"合同上还写着四个字：弹性工作。"},{"t":"nar","x":"后来我才明白，弹性的意思是：上班时间不弹，下班时间很弹。"},{"t":"nar","x":"直到某个星期五。"},{"t":"fx","w":"post","scene":{"p":"便利店","tm":"周五 23:30","bg":"store"}},{"t":"nar","x":"晚上十一点半。"},{"t":"nar","x":"我刚加完班，坐在一家便利店里吃泡面。"},{"t":"nar","x":"门口的自动感应铃响了。"},{"t":"sys","x":"欢迎光临。","s":"door"},{"t":"nar","x":"一个穿着黑色卫衣、戴着鸭舌帽的男人走进来。"},{"t":"nar","x":"他身材瘦高，动作僵硬。"},{"t":"nar","x":"脸色灰白。"},{"t":"nar","x":"十根手指又细又长。"},{"t":"nar","x":"他走到货架前，拿起一盒自热米饭，又拿了一瓶冰镇可乐。"},{"t":"nar","x":"最后来到收银台。"},{"t":"say","s":"clerk","x":"您好，一共二十八块五。"},{"t":"nar","x":"男人掏出手机。"},{"t":"nar","x":"屏幕上是微信付款码。"},{"t":"nar","x":"“嘀”的一声，支付成功。动作熟练得像是用了一辈子。"},{"t":"nar","x":"我下意识抬起头。"},{"t":"nar","x":"与他对视。"},{"t":"nar","x":"是陈守财。"},{"t":"nar","x":"我们两个都愣住了。"},{"t":"nar","x":"半晌，他慢慢地抬起一根手指，放在嘴边。"},{"t":"say","s":"zom","x":"嘘。"},{"t":"nar","x":"我盯着他。"},{"t":"say","s":"me","x":"你怎么在这儿？"},{"t":"nar","x":"陈守财看了看左右。"},{"t":"nar","x":"压低声音。"},{"t":"say","s":"zom","x":"刚……下……班……"},{"t":"nar","x":"我惊了。"},{"t":"say","s":"me","x":"你不去投胎？"},{"t":"nar","x":"他摇头。"},{"t":"say","s":"zom","x":"地……府……排……队。"},{"t":"say","s":"me","x":"要排多久？"},{"t":"say","s":"zom","x":"三……百……年。"},{"t":"nar","x":"我沉默了。"},{"t":"nar","x":"这效率，倒是很有传统特色。"},{"t":"nar","x":"我看着他揣回兜里的手机。"},{"t":"nar","x":"三个月前，他还在停车场里，对着一个二维码戳了半天。"},{"t":"nar","x":"人是会成长的。"},{"t":"nar","x":"僵尸也是。"},{"t":"say","s":"me","x":"那你现在做什么？"},{"t":"nar","x":"他掏出手机，打开一个短视频平台。"},{"t":"card","k":"profile"},{"t":"nar","x":"我往下翻了翻。"},{"t":"card","k":"videos"},{"t":"nar","x":"还有一个合集，叫《三百年老账房教你记账》，一共四十多期，播放量最高。"},{"t":"cmt1","x":"老陈记的账，比我们公司财务还清楚。"},{"t":"cmt1","x":"看完老陈的视频，我决定明天就去申请劳动仲裁。"},{"t":"nar","x":"我张了张嘴。"},{"t":"say","s":"me","x":"你做自媒体？"},{"t":"nar","x":"他点点头。"},{"t":"say","s":"zom","x":"比……守……墓……赚……钱。"},{"t":"say","s":"me","x":"赚多少？"},{"t":"nar","x":"他伸出五根手指。"},{"t":"say","s":"me","x":"五千？"},{"t":"nar","x":"他摇头。"},{"t":"say","s":"me","x":"五万？"},{"t":"nar","x":"他继续摇头。"},{"t":"say","s":"me","x":"五十万？"},{"t":"nar","x":"他点头。"},{"t":"nar","x":"他断断续续地跟我讲了很久，我大概听明白了。"},{"t":"nar","x":"账号是他自己的。"},{"t":"nar","x":"给他掌镜的摄影师，是铁头，就是那个科学打假的主播。"},{"t":"nar","x":"铁头做了五年科学打假，粉丝从来没过三十万。"},{"t":"nar","x":"老陈的工作室一开张，他就去应聘了，成了第一个员工。"},{"t":"nar","x":"铁头说，他想通了。"},{"t":"nar","x":"打不过，就加入。"},{"t":"nar","x":"我放下泡面。"},{"t":"nar","x":"突然感到一种巨大的悲哀。"},{"t":"nar","x":"一个三百年前的死人，来到现代社会三个月，就赚到了我十年都赚不到的钱。"},{"t":"nar","x":"我问："},{"t":"say","s":"me","x":"你还招人吗？"},{"t":"nar","x":"陈守财看了看我。"},{"t":"nar","x":"然后拿出手机，给我发来一张招聘海报。"},{"t":"card","k":"poster","lines":["僵尸老陈传媒工作室","招聘岗位：短视频运营、摄影剪辑、直播助理。","薪资：面议。","工作时间：晚上八点至凌晨四点。","招聘要求：胆子大，能熬夜，不怕尸臭。","特殊福利：包吃包住，提供五险一金。"]},{"t":"fx","w":"post","item":"poster"},{"t":"nar","x":"我盯着海报。"},{"t":"nar","x":"犹豫了很久。"},{"t":"say","s":"me","x":"你那儿……不会加班吧？"},{"t":"nar","x":"陈守财突然伸手，紧紧握住我的肩膀。"},{"t":"nar","x":"他的眼神变得无比严肃。"},{"t":"nar","x":"仿佛回想起了那三百二十年暗无天日的岁月。"},{"t":"nar","x":"然后，他用一种斩钉截铁的语气，一字一句地说道："},{"t":"big","x":"绝。"},{"t":"fx","w":"post","shake":1},{"t":"big","x":"不。"},{"t":"fx","w":"post","shake":1},{"t":"big","x":"加。"},{"t":"fx","w":"post","shake":1},{"t":"big","x":"班。"},{"t":"fx","w":"post","shake":3},{"t":"fx","w":"post","ach":"nojiaban"},{"t":"nar","x":"我当场决定辞职。"},{"t":"nar","x":"毕竟，一个真正死过的人，才知道工作不该占据全部人生。"},{"t":"nar","x":"辞职信是在便利店里写的，一共就一句话。"},{"t":"nar","x":"就是那天在宝库门口，我脑子里写好的那一句，只不过抬头换了个姓。"},{"t":"nar","x":"发出去的时候，是晚上十一点五十八分。"},{"t":"nar","x":"那是我工作这么多年，第一次在深夜给老板发消息。"},{"t":"nar","x":"而不是收到老板的消息。"},{"t":"nar","x":"第二天，张道长知道这件事以后，主动找到我。"},{"t":"nar","x":"他神情凝重。"},{"t":"say","s":"dao","x":"听说你跳槽了？"},{"t":"say","s":"me","x":"对。"},{"t":"say","s":"dao","x":"去僵尸那里上班？"},{"t":"say","s":"me","x":"对。"},{"t":"say","s":"dao","x":"待遇怎么样？"},{"t":"say","s":"me","x":"包吃包住，五险一金，绝不加班。"},{"t":"nar","x":"道长沉默了很久。"},{"t":"nar","x":"然后轻轻地问："},{"t":"say","s":"dao","x":"还招道士吗？"},{"t":"card","k":"end"},{"t":"act","n":"番外","name":"彩蛋"},{"t":"nar","x":"半年后，僵尸老陈传媒工作室发布招聘公告："},{"t":"card","k":"notice","lines":["急招夜班主播，男女不限，年龄不限，学历不限。","要求：会跳，脸白，能吃苦。"]},{"t":"card","k":"cmt","q":"请问活人可以应聘吗？","a":"优先考虑死人。"},{"t":"card","k":"cmt","q":"请问真的不加班吗？","a":"老板上辈子吃过这个亏。"},{"t":"card","k":"cmt","q":"请问入职会被咬吗？","a":"老板已经半年没咬人了，现在只啃鸡爪。"},{"t":"card","k":"cmt","q":"食堂有糯米饭吗？","a":"没有。行政部王经理说了，谁敢在食堂做糯米，他就跟谁拼命。"},{"t":"card","k":"cmt","q":"五险一金是真的吗？","a":"真的。本公司财务由老板亲自负责，从业三百二十年，账目从无差错。"},{"t":"card","k":"cmt","q":"你们公司到底是干什么的？","a":"以前盗墓，现在直播。以前驱鬼，现在带货。我们不生产恐怖，我们只是恐怖的打工人。"},{"t":"fx","w":"post","ach":"egg"},{"t":"card","k":"end2"}],"chapters":[{"i":0,"n":"第一幕","name":"尸毒"},{"i":207,"n":"第二幕","name":"现代驱鬼有限公司"},{"i":428,"n":"第三幕","name":"僵尸也要扫码"},{"i":581,"n":"第四幕","name":"真正的宝藏"},{"i":913,"n":"第五幕","name":"祖师爷没有教过的事情"},{"i":1276,"n":"尾声","name":"人间烟火"},{"i":1480,"n":"番外","name":"彩蛋"}],"speakers":{"me":{"n":"我","b":"我","side":"r"},"trio":{"n":"我们三个","b":"仨","side":"r"},"pang":{"n":"胖子","b":"胖"},"dao":{"n":"道士","b":"道"},"zom":{"n":"僵尸","b":"尸"},"tie":{"n":"主播铁头","b":"铁"},"doc":{"n":"急诊医生","b":"医"},"sun":{"n":"孙总","b":"孙"},"zhou":{"n":"保安老周","b":"周"},"girl":{"n":"值班的小姑娘","b":"物"},"liu":{"n":"刘阿姨","b":"刘"},"wai":{"n":"？？？","b":"？"},"zhao":{"n":"赵警官","b":"赵"},"jing":{"n":"年轻民警","b":"警"},"clerk":{"n":"店员","b":"店"},"exp":{"n":"老专家","b":"专"},"shifu":{"n":"师父","b":"师"},"biao":{"n":"驱邪大师阿彪","b":"彪"},"door":{"n":"自动感应铃","sys":1},"?":{"n":"","b":"…"},"bc":{"n":"车库广播","sys":1},"lift":{"n":"电梯","sys":1},"biz":{"n":"工商注册系统","sys":1,"warn":1}},"ach":[{"id":"like38","n":"第三十八个赞","seal":"点赞","d":"给驱邪大师阿彪的视频点了第三十八个赞","h":false},{"id":"friendly","n":"友军伤害","seal":"友军伤害","d":"用一锅刚出锅的糯米救了胖子","h":false},{"id":"shoe","n":"七天无理由退货","seal":"退货","d":"道士的鞋永远留在了青龙山","h":false},{"id":"science","n":"你不懂科学","seal":"科学","d":"通关第一幕","h":false},{"id":"dao","n":"道法自然","seal":"道法自然","d":"消费主义不自然","h":false},{"id":"behind","n":"主播后面有人","seal":"后面有人","d":"弹幕刷了三遍，主播一遍都没信","h":false},{"id":"feudal","n":"封建迷信","seal":"驳回","d":"公司名称被注册系统驳回","h":false},{"id":"stop","n":"你就说停没停吧","seal":"停了","d":"第一单生意，驱鬼成功","h":false},{"id":"relic","n":"也不收文物","seal":"文物","d":"智慧停车场拒收康熙通宝","h":false},{"id":"lift","n":"祖师爷没说过","seal":"电梯","d":"僵尸会坐电梯","h":false},{"id":"shoudao","n":"收到","seal":"收到","d":"凌晨一点，门外有僵尸，你回了老板“收到”","h":false},{"id":"dance","n":"动作标准","seal":"标准","d":"带僵尸跳完一支广场舞","h":false},{"id":"stars","n":"五星好评","seal":"五星","d":"给半夜送上山的外卖打了五星","h":false},{"id":"realname","n":"实名认证","seal":"实名","d":"夜里在山上被人喊了全名","h":false},{"id":"tiles","n":"年久失修","seal":"失修","d":"踩了没花纹的砖，万箭没有穿心","h":false},{"id":"ganzhe","n":"您先干着吧","seal":"干着","d":"在脑子里写好了一句话的辞职信","h":false},{"id":"hot","n":"它就是怕烫","seal":"怕烫","d":"通关第四幕","h":false},{"id":"cola","n":"好喝","seal":"好喝","d":"请三百二十岁的老人喝了第一口可乐","h":false},{"id":"n38","n":"第三十八个","seal":"卅八","d":"胖子成为第三十八个被咬的人","h":false},{"id":"yu","n":"余即人也","seal":"余即人也","d":"读到了僵尸视角的流水账","h":false},{"id":"praise","n":"第一个赞","seal":"一赞","d":"三百二十年来，第一个夸他的人","h":false},{"id":"stamp","n":"急急如律令","seal":"律令","d":"亲手给离职证明盖了章","h":false},{"id":"offwork","n":"终于下班","seal":"下班","d":"送陈守财下班","h":false},{"id":"cinderella","n":"灰姑娘","seal":"落网","d":"一只鞋引发的落网","h":false},{"id":"faqi","n":"那是法器","seal":"法器","d":"半桶毛肚写进了笔录","h":false},{"id":"nojiaban","n":"绝不加班","seal":"绝不加班","d":"找到了一份不加班的工作","h":false},{"id":"egg","n":"恐怖的打工人","seal":"彩蛋","d":"看完彩蛋","h":false},{"id":"soul","n":"差点被勾魂","seal":"勾魂","d":"隐藏成就：夜里过山，想替人答应全名","h":true},{"id":"rebel","n":"反抗失败","seal":"反抗","d":"隐藏成就：试图不回老板的消息","h":true},{"id":"raw","n":"生的你也敢给","seal":"生米","d":"隐藏成就：想拿生糯米喂僵尸","h":true}],"items":{"car":[{"n":"二手五菱宏光","d":"我的车。七座，底盘有点松。"},{"n":"二手五菱宏光","d":"底盘一路“咚、咚”地响。真的是底盘吗？"}],"chan":[{"n":"洛阳铲","d":"拼多多九十九包邮，送一副劳保手套。"},{"n":"洛阳铲（断）","d":"第一铲下去就断了。"}],"compass":[{"n":"十五块的罗盘","d":"夜市买的，本来就是坏的。指针一直在转。"}],"fu7":[{"n":"七张黄符","d":"道士说少说有三百年了，能卖钱。每张上面只有一个字。"},{"n":"七张黄符","d":"连起来是一句话：守库人当值勿扰。"}],"jade":[{"n":"青龙镇魂玉","d":"胖子从棺材里顺出来的。闲鱼同款十九块九，但这一枚有人追着要。"},{"n":"青龙镇魂玉","d":"已放回青铜门的凹槽。物归原主。"}],"peach":[{"n":"桃木剑","d":"九块九包邮。道长坚持认为它有损耗。"}],"bagua":[{"n":"八卦镜","d":"背面的价签没撕干净。"}],"cinnabar":[{"n":"朱砂 ×3","d":"商品详情页写着：仅供书画使用。"}],"blood":[{"n":"黑狗血（半桶）","d":"菜市场弄来的。别问是哪个摊位。"},{"n":"黑狗血（半桶）","d":"里面捞出过一片毛肚。"}],"rice":[{"n":"生糯米 ×20斤","d":"这次都是生的。胖子请你离他三米远。"}],"box":[{"n":"保温饭盒","d":"一份刚买的糯米饭，还很烫。"},{"n":"保温饭盒（空）","d":"里面的糯米饭被吐出来了。烫。"}],"takeout":[{"n":"外卖","d":"炸鸡全家桶加两瓶可乐。收货人：王建国。"},{"n":"外卖","d":"可乐少了一瓶。它说，好喝。"}],"ledger":[{"n":"流水账","d":"陈守财的随身小册子，记着最近几天发生的事。"}],"cert":[{"n":"解除劳动关系证明书","d":"黄符纸，朱砂字，盖着玄微观的章。那枚章十五块钱。"},{"n":"解除劳动关系证明书","d":"已交给陈守财。他看了很久。"}],"poster":[{"n":"招聘海报","d":"僵尸老陈传媒工作室。包吃包住，五险一金，绝不加班。"}]}};
+const N = DATA.nodes, SP = DATA.speakers, CH = DATA.chapters, ITEMS = DATA.items;
+const ACHL = DATA.ach, ACH = Object.fromEntries(ACHL.map(a => [a.id, a]));
+const RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const KEY = 'nuomi-quxie-v1';
+const $ = (s, r = document) => r.querySelector(s);
+const feed = $('#feed'), app = $('#app');
+
+let TEST = false, SKIPPING = false;
+let ACHV = {}, maxChap = -1;
+let S = freshRun(), D = freshDerived();
+let typing = null, blocked = null, activeGate = null, auto = false, autoTimer = 0, inGame = false;
+
+function freshRun() { return { i: 0, picks: {}, gates: {} }; }
+function freshDerived() { return { items: {}, hp: null, hb: null, hbLabel: null, names: {}, scene: null, chap: 0 }; }
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function h(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function seal(text, extra) { return `<span class="seal${extra ? ' ' + extra : ''}"><span>${esc(text)}</span></span>`; }
+
+/* ---------- storage (convenience only) */
+function persist() { try { localStorage.setItem(KEY, JSON.stringify({ run: S, ach: ACHV, maxChap })); } catch (e) { /* storage unavailable */ } }
+function load() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+
+/* ---------- header */
+function chapterAt(i) { let c = 0; CH.forEach((ch, k) => { if (ch.i <= i) c = k; }); return c; }
+function chapterLabel(ci) { const c = CH[ci]; if (!c) return; $('#chapNo').textContent = c.n; $('#chapName').textContent = c.name; }
+function paintScene() {
+  const sc = D.scene || { p: '', tm: '', bg: 'night' };
+  $('#place').textContent = sc.p; $('#time').textContent = sc.tm;
+  app.dataset.bg = sc.bg; app.classList.toggle('flash', sc.bg === 'flash');
+}
+function fmtMoney(v) { return (v < 0 ? '−' : '') + Math.abs(v).toLocaleString('en-US'); }
+function paintHud() {
+  const hp = $('#stHp'), hb = $('#stHb');
+  hp.hidden = D.hp == null;
+  if (D.hp != null) { $('#hpBar').style.width = D.hp + '%'; $('#hpNum').textContent = D.hp; hp.classList.toggle('low', D.hp < 30); }
+  hb.hidden = D.hb == null;
+  if (D.hb != null) {
+    const num = $('#hbNum');
+    num.textContent = D.hbLabel || (D.hb === 0 ? '0　已还清' : fmtMoney(D.hb));
+    num.classList.toggle('ok', D.hb === 0 && !D.hbLabel);
+  }
+}
+function progress() { $('#progBar').style.width = (Math.min(S.i, N.length) / N.length * 100).toFixed(2) + '%'; }
+function delta(sel, d, note, money) {
+  if (TEST || SKIPPING || !d) return;
+  const t = el('span', 'delta' + (d > 0 ? ' up' : ''));
+  t.textContent = (d > 0 ? '+' : '−') + (money ? Math.abs(d).toLocaleString('en-US') : Math.abs(d)) + (note ? '　' + note : '');
+  $(sel).append(t); setTimeout(() => t.remove(), 1800);
+}
+function toast(html, kind) {
+  if (TEST) return;
+  const box = $('#toasts'), t = el('div', 'toast ' + (kind || ''));
+  t.innerHTML = html; box.append(t);
+  while (box.children.length > 3) box.firstElementChild.remove();
+  setTimeout(() => t.classList.add('out'), 2600); setTimeout(() => t.remove(), 3100);
+}
+function shake(l) {
+  if (RM || TEST || SKIPPING) return;
+  app.classList.remove('shk1', 'shk2', 'shk3'); void app.offsetWidth; app.classList.add('shk' + l);
+  setTimeout(() => app.classList.remove('shk' + l), 600);
+}
+function unlock(id, live) {
+  if (ACHV[id]) return;
+  ACHV[id] = 1; persist();
+  if (live) { const a = ACH[id]; toast(seal(a.seal) + `<span class="tt"><small>${a.h ? '隐藏成就' : '成就达成'}</small><b>${esc(a.n)}</b></span>`, 'ach'); }
+}
+
+/* ---------- effects */
+function applyFx(n, live) {
+  const quiet = !live || SKIPPING;
+  if (n.scene) { D.scene = n.scene; paintScene(); }
+  if ('hp' in n) { D.hp = n.hp; paintHud(); }
+  if ('hpd' in n) { const b = D.hp == null ? 100 : D.hp; D.hp = Math.max(0, Math.min(100, b + n.hpd)); paintHud(); if (!quiet) delta('#stHp', D.hp - b, n.note); }
+  if ('hpset' in n) { const b = D.hp == null ? 0 : D.hp; D.hp = n.hpset; paintHud(); if (!quiet) delta('#stHp', n.hpset - b, n.note); }
+  if ('hb' in n) { D.hb = n.hb; paintHud(); if (!quiet) delta('#stHb', n.hb, n.note, true); }
+  if ('hbd' in n) { D.hb += n.hbd; paintHud(); if (!quiet) delta('#stHb', n.hbd, n.note, true); }
+  if ('hbset' in n) { const b = D.hb; D.hb = n.hbset; paintHud(); if (!quiet) delta('#stHb', n.hbset - b, n.note, true); }
+  if ('hblabel' in n) { D.hbLabel = n.hblabel; paintHud(); }
+  if (n.item) {
+    const had = !!D.items[n.item]; D.items[n.item] = n.v || 1;
+    if (!quiet) { const it = ITEMS[n.item][D.items[n.item] - 1]; toast(`<span class="tk">${had ? '道具更新' : '获得道具'}</span><b>${esc(it.n)}</b>`, 'item'); }
+  }
+  if (n.ach) unlock(n.ach, live);
+  if (n.name) { D.names[n.name[0]] = n.name[1]; if (!quiet) toast(`<span class="tk">人物</span><b>${esc(n.name[1])}</b>`, 'item'); }
+  if (n.shake && live) shake(n.shake);
+}
+
+/* ---------- typing */
+function stick() { if (feed.scrollHeight - feed.scrollTop - feed.clientHeight < 180) feed.scrollTop = feed.scrollHeight; }
+function scrollEnd() { feed.scrollTop = feed.scrollHeight; }
+function typeText(target, text, ms) {
+  const tok = { target, text }; typing = tok; target.textContent = '';
+  const t0 = performance.now();
+  const frame = now => {
+    if (typing !== tok) return;
+    const k = Math.min(text.length, 1 + Math.floor((now - t0) / ms));
+    target.textContent = text.slice(0, k); stick();
+    if (k >= text.length) { typing = null; lineDone(); } else requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+function finishTyping() { const t = typing; if (!t) return; typing = null; t.target.textContent = t.text; scrollEnd(); lineDone(); }
+function lineDone() { if (auto && blocked === null) scheduleAuto(); }
+function writeText(target, text, live, ms) { if (live && !RM && !TEST && !SKIPPING) typeText(target, text, ms || 16); else target.textContent = text; }
+
+/* ---------- rendering */
+function add(e) { feed.append(e); scrollEnd(); return e; }
+function showNode(n, idx, live) {
+  switch (n.t) {
+    case 'act': return renderAct(n, idx);
+    case 'nar': { const p = add(el('p', 'nar')); writeText(p, n.x, live); return p; }
+    case 'say': return renderSay(n, live);
+    case 'sys': {
+      const sp = SP[n.s] || {}, e = el('div', 'sys' + (sp.warn ? ' warn' : ''));
+      e.append(el('b', '', n.n || sp.n || '系统')); const span = el('span'); e.append(span); add(e); writeText(span, n.x, live); return e;
+    }
+    case 'dan': return add(el('div', 'dan', n.x));
+    case 'led': return add(el('div', 'led' + (n.v ? ' ' + n.v : ''), n.x));
+    case 'paper': return add(el('div', 'paper', n.x));
+    case 'stone': return add(el('div', 'stone', n.x));
+    case 'big': {
+      let row = feed.lastElementChild;
+      if (!row || !row.classList.contains('bigrow')) row = add(el('div', 'bigrow'));
+      const big = el('span', 'big', n.x.replace(/。$/, ''));
+      if (n.x.endsWith('。')) big.append(el('i', 'dot', '。'));
+      row.append(big); scrollEnd(); return row;
+    }
+    case 'cmt1': return add(h(`<div class="cmt1"><span class="av">网</span><span>${esc(n.x)}</span></div>`));
+    case 'card': return add(CARDS[n.k](n));
+    case 'choice': return renderChoice(n, idx, live);
+    case 'gate': return renderGate(n, idx, live);
+  }
+  return null;
+}
+function renderAct(n, idx) {
+  const ci = CH.findIndex(c => c.i === idx);
+  if (ci >= 0) { D.chap = ci; chapterLabel(ci); if (ci > maxChap) { maxChap = ci; persist(); } }
+  return add(h(`<div class="actcard"><span class="act-no">${esc(n.n)}</span><span class="act-name">${esc(n.name)}</span><span class="act-seal" aria-hidden="true">令</span></div>`));
+}
+function renderSay(n, live) {
+  const code = SP[n.s] ? n.s : '?', sp = SP[code];
+  const right = sp.side === 'r';
+  const last = feed.lastElementChild;
+  const cont = !!(last && last.classList.contains('say') && last.dataset.s === code);
+  const name = D.names[code] || sp.n;
+  let badge = sp.b;
+  if ((code === 'zom' || code === 'wai') && D.names[code]) badge = D.names[code][0];
+  const w = el('div', `say ${right ? 'r' : 'l'} s-${code === '?' ? 'unk' : code}${cont ? ' cont' : ''}`);
+  w.dataset.s = code;
+  const b = el('div', 'badge', badge); b.setAttribute('aria-hidden', 'true');
+  const sb = el('div', 'sb');
+  if (!cont && name && (!right || code === 'trio')) sb.append(el('div', 'who', name));
+  sb.append(el('span', 'sr', (name || '') + '说：'));
+  const bub = el('div', 'bub'); sb.append(bub);
+  w.append(b, sb); add(w);
+  writeText(bub, n.x, live, code === 'zom' ? (n.x.includes('……') ? 95 : 40) : 16);
+  return w;
+}
+
+/* ---------- flow */
+function postFx(live) { while (S.i < N.length && N[S.i].t === 'fx' && N[S.i].w === 'post') { applyFx(N[S.i], live); S.i++; } }
+function step(live = true) {
+  if (typing) { finishTyping(); return; }
+  if (blocked !== null) { nudge(); return; }
+  while (S.i < N.length && N[S.i].t === 'fx') { applyFx(N[S.i], live); S.i++; }
+  if (S.i >= N.length) { syncCtrl(); return; }
+  const idx = S.i, n = N[idx];
+  if (n.t === 'choice' || n.t === 'gate') { showNode(n, idx, live); persist(); syncCtrl(); return; }
+  S.i++;
+  showNode(n, idx, live);
+  if (n.t === 'act') { while (S.i < N.length && N[S.i].t === 'fx') { applyFx(N[S.i], live); S.i++; } }
+  else postFx(live);
+  progress(); persist(); syncCtrl();
+  if (!typing && auto) scheduleAuto();
+}
+function complete(idx, live) {
+  if (blocked !== idx) return;
+  blocked = null; activeGate = null; S.i = idx + 1;
+  postFx(live); progress(); persist(); syncCtrl();
+  if (auto) scheduleAuto();
+}
+function nudge() {
+  const a = activeGate && activeGate.el;
+  if (!a) return;
+  a.scrollIntoView({ block: 'nearest' });
+  a.classList.remove('nudge'); void a.offsetWidth; a.classList.add('nudge');
+}
+function syncCtrl() {
+  const nb = $('#nextBtn');
+  if (blocked !== null) { nb.disabled = false; nb.firstChild.textContent = '先完成上面的互动'; }
+  else if (S.i >= N.length) { nb.disabled = true; nb.firstChild.textContent = '已经读完了'; }
+  else { nb.disabled = false; nb.firstChild.textContent = '继续'; }
+  $('#autoBtn').setAttribute('aria-pressed', auto ? 'true' : 'false');
+}
+function scheduleAuto() {
+  clearTimeout(autoTimer);
+  if (!auto || blocked !== null || typing) return;
+  const last = feed.lastElementChild, len = last ? (last.textContent || '').length : 10;
+  autoTimer = setTimeout(() => { if (auto && !typing && blocked === null) step(); }, Math.min(4800, 1000 + len * 60));
+}
+function skip() {
+  if (typing) finishTyping();
+  if (blocked !== null) { nudge(); return; }
+  SKIPPING = true;
+  let c = 0;
+  try {
+    while (S.i < N.length && blocked === null && c < 900) {
+      while (S.i < N.length && N[S.i].t === 'fx') { applyFx(N[S.i], true); S.i++; }
+      if (S.i >= N.length) break;
+      const n = N[S.i];
+      if (n.t === 'act' && c > 0) break;
+      if (n.t === 'choice' || n.t === 'gate') { showNode(n, S.i, true); break; }
+      const idx = S.i; S.i++; showNode(n, idx, true); postFx(true); c++;
+    }
+  } finally { SKIPPING = false; }
+  progress(); persist(); syncCtrl(); scrollEnd();
+}
+
+/* ---------- choices */
+function renderChoice(n, idx, live) {
+  const box = el('div', 'choice'); box.dataset.noadv = '1';
+  box.append(el('p', 'q', n.q));
+  const btns = n.o.map(o => { const b = el('button', 'opt', o.l); b.type = 'button'; box.append(b); return b; });
+  add(box);
+  const lock = j => btns.forEach((b, k) => { b.disabled = true; b.classList.toggle('on', k === j); });
+  const picked = S.picks[n.id];
+  if (picked != null) { lock(picked); replies(n.o[picked], false); return box; }
+  blocked = idx;
+  const pick = j => {
+    if (blocked !== idx || S.picks[n.id] != null) return;
+    S.picks[n.id] = j; lock(j);
+    const o = n.o[j]; if (o.ach) unlock(o.ach, live);
+    replies(o, live, () => complete(idx, live));
+  };
+  btns.forEach((b, j) => b.addEventListener('click', e => { e.stopPropagation(); pick(j); }));
+  activeGate = { el: box, resolve: () => pick(0) };
+  if (live && !TEST) setTimeout(() => btns[0].focus({ preventScroll: true }), 60);
+  return box;
+}
+function replies(o, live, done) {
+  const list = o.r || [];
+  let k = 0;
+  const next = () => {
+    if (k >= list.length) { if (done) done(); return; }
+    showNode(list[k++], -1, live);
+    if (typing) { const wait = () => (typing ? setTimeout(wait, 60) : setTimeout(next, 240)); wait(); } else next();
+  };
+  next();
+}
+
+/* ---------- gates */
+function renderGate(n, idx, live) {
+  const done = !!S.gates[n.id];
+  const box = el('div', 'gate card'); box.dataset.noadv = '1';
+  add(box);
+  const finish = delay => {
+    if (blocked !== idx) return;
+    S.gates[n.id] = 1;
+    if (delay && !TEST) setTimeout(() => complete(idx, live), delay); else complete(idx, live);
+  };
+  const r = GATES[n.k](box, { done, live, finish }) || {};
+  scrollEnd();
+  if (!done) { blocked = idx; activeGate = { el: box, resolve: r.auto }; }
+  return box;
+}
+function onTap(btn, fn) { btn.addEventListener('click', e => { e.stopPropagation(); fn(); }); }
+const GATES = {
+  like(box, c) {
+    box.classList.add('phone');
+    box.innerHTML = `<div class="ph-head"><span class="app-ic" style="--ic:#1e2321">视</span><span>短视频</span><span class="ago">推荐</span></div>
+      <div class="vid"><div class="vid-cover"><span>糯米<br>拔尸毒</span></div><div class="vid-side"><button class="heart" type="button" aria-label="点赞"><span class="h-ic">♥</span><span class="h-n">37</span></button></div></div>
+      <div class="vid-meta"><b>@驱邪大师阿彪</b><p>《祖传秘方：糯米拔尸毒，三步搞定》</p></div><p class="gate-tip">点一下爱心</p>`;
+    const btn = $('.heart', box), cnt = $('.h-n', box), tip = $('.gate-tip', box);
+    const set = () => { btn.classList.add('on'); btn.disabled = true; cnt.textContent = '38'; tip.textContent = '你点了第三十八个赞。'; };
+    if (c.done) { set(); return {}; }
+    const act = () => { set(); btn.classList.add('pop'); unlock('like38', c.live); c.finish(450); };
+    onTap(btn, act); return { auto: act };
+  },
+  form(box, c) {
+    box.classList.add('phone');
+    box.innerHTML = `<div class="ph-head"><span class="app-ic" style="--ic:#c4321c">企</span><span>企业名称自主申报</span></div>
+      <div class="ph-body form"><label for="f-name">企业名称</label><input id="f-name" value="糯米驱邪有限公司" readonly><button type="button" class="act-btn">提交申请</button></div>`;
+    const inp = $('input', box), btn = $('button', box);
+    const set = () => { inp.classList.add('bad'); btn.disabled = true; btn.textContent = '已提交'; };
+    if (c.done) { set(); return {}; }
+    const act = () => { set(); shake(1); c.finish(350); };
+    onTap(btn, act); return { auto: act };
+  },
+  dance(box, c) {
+    box.classList.add('dancebox');
+    box.innerHTML = `<p class="gate-title">跟着鼓点，带它跳四拍</p><div class="beats"><i></i><i></i><i></i><i></i></div><button type="button" class="act-btn">跳</button><p class="gate-tip">连点四下</p>`;
+    const dots = [...box.querySelectorAll('.beats i')], btn = $('button', box), tip = $('.gate-tip', box);
+    const words = ['一跳', '一顿', '双臂平伸', '严丝合缝'];
+    let k = 0;
+    if (c.done) { dots.forEach(d => d.classList.add('on')); btn.disabled = true; tip.textContent = '四拍全中。'; return {}; }
+    const hit = () => { if (k >= 4) return; dots[k].classList.add('on'); tip.textContent = words[k]; k++; if (k === 4) { btn.disabled = true; c.finish(500); } };
+    onTap(btn, hit); return { auto: () => { while (k < 4) hit(); } };
+  },
+  stars(box, c) {
+    box.classList.add('phone');
+    box.innerHTML = `<div class="ph-head"><span class="app-ic" style="--ic:#f7b267;--ict:#2b1a0e">外</span><span>给这单外卖评价</span></div>
+      <div class="ph-body"><p class="sub">已送达：青龙山半山腰，土地庙往左第三座坟</p><div class="stars" role="group" aria-label="评分">${[1, 2, 3, 4, 5].map(i => `<button type="button" data-v="${i}" aria-label="${i} 星">★</button>`).join('')}</div><p class="gate-tip"></p></div>`;
+    const bs = [...box.querySelectorAll('.stars button')], tip = $('.gate-tip', box);
+    const paint = v => bs.forEach((b, i) => b.classList.toggle('on', i < v));
+    if (c.done) { paint(5); bs.forEach(b => { b.disabled = true; }); tip.textContent = '五星好评。'; return {}; }
+    let fired = false;
+    const rate = v => {
+      if (fired) return; fired = true; paint(v); bs.forEach(b => { b.disabled = true; });
+      const end = () => { paint(5); tip.textContent = '五星好评。'; unlock('stars', c.live); c.finish(500); };
+      if (v < 5) { tip.textContent = '胖子按住你的手：“五星。”'; if (TEST) end(); else setTimeout(end, 1000); } else end();
+    };
+    bs.forEach(b => onTap(b, () => rate(+b.dataset.v)));
+    return { auto: () => rate(5) };
+  },
+  tiles(box, c) {
+    box.classList.add('tilebox');
+    const pat = [1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1];
+    box.innerHTML = `<p class="gate-title">选一块砖踩上去</p><div class="tiles">${pat.map(p => `<button type="button" class="tile${p ? ' pat' : ''}" aria-label="${p ? '有花纹的砖' : '没花纹的砖'}"></button>`).join('')}</div><p class="gate-tip">道长说，只能踩有花纹的。</p>`;
+    const ts = [...box.querySelectorAll('.tile')], tip = $('.gate-tip', box);
+    if (c.done) { ts.forEach(t => { t.disabled = true; }); ts[1].classList.add('step'); tip.textContent = '你还没站稳，胖子已经走过去了。'; return {}; }
+    const go = t => { t.classList.add('step'); ts.forEach(x => { x.disabled = true; }); tip.textContent = '你还没站稳，胖子已经走过去了。'; c.finish(700); };
+    ts.forEach(t => onTap(t, () => go(t)));
+    return { auto: () => go(ts[0]) };
+  },
+  slot(box, c) {
+    box.classList.add('slotbox');
+    box.innerHTML = `<p class="gate-title">把青龙镇魂玉放回青铜门的凹槽</p><div class="slotrow"><button type="button" class="jade" aria-label="青龙镇魂玉">龙</button><span class="hole" aria-hidden="true"></span></div><p class="gate-tip">点一下玉佩</p>`;
+    const jade = $('.jade', box), tip = $('.gate-tip', box);
+    const set = () => { box.classList.add('in'); jade.disabled = true; tip.textContent = '严丝合缝。'; };
+    if (c.done) { set(); return {}; }
+    const act = () => { set(); c.finish(800); };
+    onTap(jade, act); return { auto: act };
+  },
+  give(box, c) {
+    box.classList.add('givebox');
+    box.innerHTML = `<p class="gate-title">它看起来很烫，也很渴</p><button type="button" class="act-btn">递一瓶可乐</button>`;
+    const btn = $('button', box);
+    const set = () => { btn.disabled = true; btn.textContent = '可乐递过去了'; };
+    if (c.done) { set(); return {}; }
+    const act = () => { set(); c.finish(200); };
+    onTap(btn, act); return { auto: act };
+  },
+  praise(box, c) {
+    box.classList.add('praisebox');
+    box.innerHTML = `<p class="gate-title">三百二十年，没有人夸过他</p><button type="button" class="act-btn">夸他一句</button><p class="gate-tip"></p>`;
+    const btn = $('button', box), tip = $('.gate-tip', box);
+    const set = () => { btn.disabled = true; btn.textContent = '夸过了'; tip.textContent = '你是三百二十年来，第一个夸他的人。'; };
+    if (c.done) { set(); return {}; }
+    const act = () => { set(); box.append(el('span', 'plus1', '+1')); unlock('praise', c.live); c.finish(900); };
+    onTap(btn, act); return { auto: act };
+  },
+  stamp(box, c) {
+    box.classList.add('stampbox');
+    box.innerHTML = `<p class="gate-title">朱砂还没干，章在道长手里</p><button type="button" class="act-btn">盖章</button>`;
+    const btn = $('button', box);
+    const put = () => { const s = feed.querySelectorAll('.cert .slot'); if (s.length) s[s.length - 1].classList.add('stamped'); btn.disabled = true; btn.textContent = '盖好了'; };
+    if (c.done) { put(); return {}; }
+    const act = () => { put(); shake(1); c.finish(650); };
+    onTap(btn, act); return { auto: act };
+  },
+  sign(box, c) {
+    box.classList.add('signbox');
+    box.innerHTML = `<p class="gate-title">交接清单</p><ul class="hand"><li><span>黄金</span><span>一千三百二十七锭</span></li><li><span>白银</span><span>四千零八锭</span></li><li><span>玉器</span><span>三百一十二件</span></li><li><span>瓷器</span><span>九十六件</span></li><li><span>铜钱</span><span>八十二万六千四百文</span></li></ul>
+      <div class="signrow"><span>交接人　陈守财</span><span>接收人　<em class="sig"></em></span></div><button type="button" class="act-btn">签字</button>`;
+    const sig = $('.sig', box), btn = $('button', box);
+    const set = () => { sig.textContent = '我'; btn.disabled = true; btn.textContent = '签好了'; };
+    if (c.done) { set(); return {}; }
+    const act = () => { set(); c.finish(500); };
+    onTap(btn, act); return { auto: act };
+  },
+};
+
+/* ---------- cards */
+function icStyle(app) { return ({ '钉钉': '--ic:#2f7cf6', '公司群': '--ic:#2bb24c', '美团外卖': '--ic:#ffc300;--ict:#2b1a0e' })[app] || ''; }
+function fillQR(cv) {
+  const n = 21, s = 4; cv.width = cv.height = n * s;
+  const g = cv.getContext('2d'); if (!g) return;
+  g.fillStyle = '#fff'; g.fillRect(0, 0, n * s, n * s); g.fillStyle = '#1e2321';
+  let seed = 320; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (rnd() > 0.52) g.fillRect(x * s, y * s, s, s);
+  const finder = (fx, fy) => {
+    g.fillStyle = '#fff'; g.fillRect((fx - 1) * s, (fy - 1) * s, 9 * s, 9 * s);
+    g.fillStyle = '#1e2321'; g.fillRect(fx * s, fy * s, 7 * s, 7 * s);
+    g.fillStyle = '#fff'; g.fillRect((fx + 1) * s, (fy + 1) * s, 5 * s, 5 * s);
+    g.fillStyle = '#1e2321'; g.fillRect((fx + 2) * s, (fy + 2) * s, 3 * s, 3 * s);
+  };
+  finder(0, 0); finder(n - 7, 0); finder(0, n - 7);
+}
+const CARDS = {
+  notify: n => h(`<div class="card phone notify"><div class="ph-head"><span class="app-ic" style="${icStyle(n.app)}">${esc(n.app[0])}</span><span>${esc(n.app)}</span><span class="ago">现在</span></div><div class="ph-body">${n.frm ? `<b>${esc(n.frm)}</b>` : ''}<p>${esc(n.msg)}</p></div></div>`),
+  xianyu: () => h(`<div class="card phone"><div class="ph-head"><span class="app-ic" style="--ic:#ffd84d;--ict:#2b1a0e">闲</span><span>闲鱼</span><span class="ago">搜索：风水</span></div><div class="ph-body"><div class="listing"><div class="thumb">卦</div><div><p class="lt">祖传风水，寻龙点穴，看宅看坟，线上线下均可，不准不要钱</p><p class="price">¥ 面议</p><p class="sub">卖家：玄微子　排第一</p></div></div></div></div>`),
+  live: n => h(`<div class="card live"><div class="lv-top"><span class="lv-dot">直播中</span><span>${esc(n.viewers)} 人在看</span></div><p class="lv-title">${esc(n.title)}</p><div class="lv-host"><span class="badge-s">铁</span><span>主播铁头　科学打假</span></div></div>`),
+  shop: () => h(`<div class="card phone"><div class="ph-head"><span class="app-ic" style="--ic:#e5484d">橱</span><span>主播的带货橱窗</span></div><ul class="shop"><li><span class="sk">灯</span><span>强光手电</span><b>¥59</b></li><li><span class="sk">喷</span><span>防狼喷雾</span><b>¥29.9</b></li><li><span class="sk">符</span><span>开过光的平安符</span><b>¥39.9</b></li></ul></div>`),
+  license: () => h(`<div class="card lic"><div class="lic-h">营业执照<small>审批中，三个工作日</small></div><dl><dt>名称</dt><dd>青龙山传统民俗文化咨询有限公司</dd><dt>实际经营业务</dt><dd>驱鬼、抓僵尸、阴宅风水、民俗调查、古墓探险</dd></dl><span class="lic-seal">筹</span></div>`),
+  qr: () => { const e = h(`<div class="card phone"><div class="ph-head"><span class="app-ic" style="--ic:#0f9d58">停</span><span>青龙御府智慧停车</span></div><div class="ph-body qrwrap"><canvas class="qr" aria-label="付款二维码"></canvas><dl class="kv"><dt>车牌</dt><dd>未识别</dd><dt>入场记录</dt><dd>未查询到</dd><dt>应付</dt><dd>¥60.00<small>无入场记录，按全天收费</small></dd></dl></div></div>`); fillQR($('canvas', e)); return e; },
+  xianyu2: () => h(`<div class="card phone"><div class="ph-head"><span class="app-ic" style="--ic:#ffd84d;--ict:#2b1a0e">闲</span><span>搜索：青龙镇魂玉</span><span class="ago">3,000+ 件</span></div><ul class="shop"><li><span class="sk g">玉</span><span>青龙镇魂玉 开光 送证书</span><b>¥19.9</b></li><li><span class="sk g">玉</span><span>古法青龙镇魂佩 镇宅辟邪</span><b>¥39</b></li><li><span class="sk g">玉</span><span>祖传青龙玉 假一赔十</span><b>¥128</b></li></ul></div>`),
+  billboard: n => h(`<div class="card bill"><span class="bill-brand">青龙御府</span><p>${esc(n.x.split('——')[1] || n.x)}</p></div>`),
+  incense: () => h(`<div class="card incense" role="img" aria-label="三炷香，两短一长"><div class="sticks"><i style="--h:34%"></i><i style="--h:88%"></i><i style="--h:30%"></i></div><div class="censer"></div><p>两短一长</p></div>`),
+  fu7: () => h(`<div class="card fu7" role="img" aria-label="守库人当值勿扰">${[...'守库人当值勿扰'].map((ch, i) => `<span style="--r:${[-4, 3, -2, 5, -3, 2, -5][i]}deg">${ch}</span>`).join('')}</div>`),
+  calc: () => h(`<div class="card calc"><p class="calc-l">三百二十年加班费（估算）</p><p class="calc-n">8834201773091246508137766</p><p class="calc-e">超出显示范围</p></div>`),
+  profile: () => h(`<div class="card phone"><div class="prof"><span class="avatar">陈</span><div><b>僵尸老陈的现代生活</b><p class="sub">粉丝 187.6万</p></div></div><div class="latest"><span class="tag">最新</span><span>《清朝人第一次吃螺蛳粉》</span><b>赞 326万</b></div></div>`),
+  videos: () => h(`<div class="card vids">${[['梯', '《清朝人第一次坐电梯》'], ['舞', '《清朝人第一次跳广场舞》'], ['可', '《清朝人第一次喝可乐》']].map(([ch, t]) => `<div class="vt"><span>${ch}</span><p>${t}</p></div>`).join('')}</div>`),
+  poster: n => {
+    const [head, ...rows] = n.lines;
+    return h(`<div class="card poster"><p class="po-h">${esc(head)}</p><dl>${rows.map(r => { const k = r.indexOf('：'); return `<dt>${esc(r.slice(0, k))}</dt><dd>${esc(r.slice(k + 1).replace(/。$/, ''))}</dd>`; }).join('')}</dl><span class="po-seal"><span>绝不加班</span></span></div>`);
+  },
+  notice: n => h(`<div class="card phone"><div class="ph-head"><span class="app-ic" style="--ic:#93b29c;--ict:#0d2a2e">陈</span><span>僵尸老陈传媒工作室</span><span class="ago">招聘公告</span></div><div class="ph-body">${n.lines.map(l => `<p>${esc(l)}</p>`).join('')}</div></div>`),
+  cmt: n => h(`<div class="card phone cmt"><div class="c-row"><span class="avatar s">网</span><div><b>网友</b><p>${esc(n.q)}</p></div></div><div class="c-row reply"><span class="avatar s z">陈</span><div><b>僵尸老陈传媒（官方）</b><p>${esc(n.a)}</p></div></div></div>`),
+  cert: n => h(`<div class="card cert"><p class="ct-h">解除劳动关系证明书</p>${n.lines.slice(0, -1).map(l => `<p>${esc(l)}</p>`).join('')}<p class="ct-f">${esc(n.lines[n.lines.length - 1])}</p><span class="slot" aria-hidden="true"><span>玄微观</span></span></div>`),
+  end: () => endCard('全文完', [['next', '看彩蛋', 'act-btn'], ['wall', '成就墙', 'ghost'], ['restart', '从头再玩', 'ghost']]),
+  end2: () => endCard('彩蛋完', [['wall', '成就墙', 'act-btn'], ['restart', '从头再玩', 'ghost'], ['title', '回到标题', 'ghost']]),
+};
+function endCard(title, buttons) {
+  const got = ACHL.filter(a => ACHV[a.id]).length, items = Object.keys(D.items).length;
+  const e = h(`<div class="card endcard" data-noadv="1"><p class="end-h">${title}</p><p class="end-s">成就 ${got}/${ACHL.length}　道具 ${items}/${Object.keys(ITEMS).length}</p><div class="end-b">${buttons.map(([a, t, cls]) => `<button type="button" class="${cls}" data-a="${a}">${t}</button>`).join('')}</div></div>`);
+  e.querySelectorAll('button').forEach(b => onTap(b, () => {
+    const a = b.dataset.a;
+    if (a === 'next') step();
+    else if (a === 'wall') openSheet('ach');
+    else if (a === 'restart') newGame();
+    else if (a === 'title') showTitle();
+  }));
+  return e;
+}
+
+/* ---------- runs */
+function resetView() { clearTimeout(autoTimer); typing = null; blocked = null; activeGate = null; feed.innerHTML = ''; }
+function rebuild(target) {
+  resetView(); D = freshDerived();
+  const atAct = !!(N[target] && N[target].t === 'act');
+  const from = atAct ? target : CH[chapterAt(Math.max(0, target - 1))].i;
+  for (let k = 0; k < target; k++) {
+    const n = N[k];
+    if (n.t === 'fx') { applyFx(n, false); continue; }
+    if (n.t === 'choice' && S.picks[n.id] == null) S.picks[n.id] = 0;
+    if (n.t === 'gate') S.gates[n.id] = 1;
+    if (k >= from) showNode(n, k, false);
+    else if (n.t === 'act') { const c = CH.findIndex(x => x.i === k); if (c >= 0) D.chap = c; }
+  }
+  S.i = target;
+  chapterLabel(chapterAt(atAct ? target : Math.max(0, target - 1)));
+  paintScene(); paintHud(); progress(); syncCtrl();
+  if (target < N.length && (N[target].t === 'choice' || N[target].t === 'gate')) showNode(N[target], target, true);
+  scrollEnd();
+}
+function showGame() { $('#title').hidden = true; inGame = true; }
+function showTitle() { auto = false; clearTimeout(autoTimer); closeSheet(); inGame = false; refreshTitle(); $('#title').hidden = false; syncCtrl(); }
+function newGame() {
+  S = freshRun(); D = freshDerived(); resetView(); auto = false;
+  paintScene(); paintHud(); progress(); closeSheet(); showGame(); step();
+}
+function resume() {
+  const saved = load();
+  if (!saved || !saved.run) { newGame(); return; }
+  S = saved.run; S.picks = S.picks || {}; S.gates = S.gates || {};
+  closeSheet(); showGame(); rebuild(Math.min(S.i, N.length));
+}
+function jump(ci) {
+  const t = CH[ci].i;
+  for (let k = t; k < N.length; k++) { const n = N[k]; if (n.t === 'choice') delete S.picks[n.id]; if (n.t === 'gate') delete S.gates[n.id]; }
+  closeSheet(); showGame(); rebuild(t); step();
+}
+
+/* ---------- title and menu */
+function refreshTitle() {
+  const saved = load(), run = saved && saved.run, rb = $('#resumeBtn');
+  if (run && run.i > 0 && run.i < N.length) { const c = CH[chapterAt(run.i)]; rb.hidden = false; rb.textContent = `继续营业：${c.n} ${c.name}`; } else rb.hidden = true;
+  $('#wallBtn').textContent = `成就墙 ${ACHL.filter(a => ACHV[a.id]).length}/${ACHL.length}`;
+}
+function openSheet(tab) { renderPanes(); setTab(tab || 'chap'); $('#sheet').hidden = false; $('#closeSheet').focus({ preventScroll: true }); }
+function closeSheet() { $('#sheet').hidden = true; }
+function setTab(tab) {
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false'));
+  ['chap', 'items', 'ach'].forEach(t => { $('#pane-' + t).hidden = t !== tab; });
+}
+function renderPanes() {
+  const pc = $('#pane-chap');
+  pc.innerHTML = `<p class="count">读到哪一章，就能从哪一章重读。重读会重新问你选项。</p><div class="chaps">${CH.map((c, k) => {
+    const open = k <= maxChap, cur = inGame && k === D.chap;
+    return `<button type="button" class="chaprow" data-c="${k}" ${open ? '' : 'disabled'}><span>${esc(c.n)}</span><b>${open ? esc(c.name) : '？？？'}</b><span class="st">${cur ? '正在读' : open ? '重读' : '未解锁'}</span></button>`;
+  }).join('')}</div>`;
+  pc.querySelectorAll('.chaprow').forEach(b => b.addEventListener('click', () => jump(+b.dataset.c)));
+  const ids = Object.keys(D.items);
+  $('#pane-items').innerHTML = `<p class="count">已收集 ${ids.length}/${Object.keys(ITEMS).length}</p>` + (ids.length
+    ? `<div class="items">${ids.map(id => { const it = ITEMS[id][D.items[id] - 1]; return `<div class="irow"><b>${esc(it.n)}</b><p>${esc(it.d)}</p></div>`; }).join('')}</div>`
+    : '<p class="count">还没有道具。开始营业以后，捡到的东西会放在这里。</p>');
+  const got = ACHL.filter(a => ACHV[a.id]).length;
+  $('#pane-ach').innerHTML = `<p class="count">已解锁 ${got}/${ACHL.length}，其中有三个是隐藏成就，要选对选项才会出现。</p><div class="wall">${ACHL.map(a => ACHV[a.id]
+    ? `<div class="wcell">${seal(a.seal)}<b>${esc(a.n)}</b><p>${esc(a.d)}</p></div>`
+    : `<div class="wcell">${seal('？', 'locked')}<b>${a.h ? '隐藏成就' : '？？？'}</b><p>${a.h ? '和某个选项有关' : '读下去就知道'}</p></div>`).join('')}</div>`;
+}
+
+/* ---------- input */
+feed.addEventListener('click', e => { if (e.target.closest('[data-noadv], button, a, input')) return; step(); });
+$('#nextBtn').addEventListener('click', () => step());
+$('#autoBtn').addEventListener('click', () => { auto = !auto; syncCtrl(); if (auto) { if (typing) return; step(); } else clearTimeout(autoTimer); });
+$('#skipBtn').addEventListener('click', () => { auto = false; clearTimeout(autoTimer); skip(); });
+$('#menuBtn').addEventListener('click', () => openSheet('chap'));
+$('#closeSheet').addEventListener('click', closeSheet);
+$('#toTitle').addEventListener('click', showTitle);
+$('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+$('#startBtn').addEventListener('click', newGame);
+$('#resumeBtn').addEventListener('click', resume);
+$('#wallBtn').addEventListener('click', () => openSheet('ach'));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#sheet').hidden) { closeSheet(); return; }
+  if (!inGame || !$('#sheet').hidden) return;
+  if (e.target.closest && e.target.closest('button, input, textarea')) return;
+  if ([' ', 'Enter', 'ArrowDown', 'ArrowRight'].includes(e.key)) { e.preventDefault(); step(); }
+});
+
+/* ---------- test hook: plays the whole story with default choices */
+window.__nmTest = {
+  run(limit = 30000) {
+    TEST = true; const errs = []; let c = 0;
+    try {
+      if (!inGame) newGame();
+      while (S.i < N.length && c < limit) {
+        c++;
+        if (typing) finishTyping();
+        if (blocked !== null) {
+          if (!activeGate || !activeGate.resolve) { errs.push('no resolver at node ' + blocked); break; }
+          activeGate.resolve(); continue;
+        }
+        step(false);
+      }
+    } catch (e) { errs.push(String((e && e.stack) || e)); }
+    TEST = false;
+    return { i: S.i, len: N.length, steps: c, blocked, feed: feed.children.length, ach: ACHL.filter(a => ACHV[a.id]).length, items: Object.keys(D.items).length, hp: D.hp, hb: D.hb, errs };
+  },
+  jump, resume, rebuild: t => rebuild(t), state: () => ({ i: S.i, chap: D.chap, maxChap }),
+};
+
+/* ---------- boot */
+function start(hot) {
+  const saved = hot && hot.run ? hot : load();
+  if (saved) { ACHV = saved.ach || {}; maxChap = saved.maxChap == null ? -1 : saved.maxChap; }
+  $('#tTags').innerHTML = DATA.tags.map(t => `<li>${esc(t)}</li>`).join('');
+  $('#tEpi').textContent = DATA.epigraph;
+  refreshTitle(); syncCtrl();
+  if (hot && hot.view === 'game' && hot.run) { S = hot.run; S.picks = S.picks || {}; S.gates = S.gates || {}; showGame(); rebuild(Math.min(S.i, N.length)); }
+}
+if (window.claude && window.claude.hot && typeof window.claude.hot.snapshot === 'function') {
+  window.claude.hot.snapshot(() => ({ run: S, ach: ACHV, maxChap, view: inGame ? 'game' : 'title' }));
+}
+if (window.claude && window.claude.hot && typeof window.claude.hot.ready === 'function') window.claude.hot.ready(start);
+else start((window.claude && window.claude.hot && window.claude.hot.data) || {});
+})();
+</script>
+</body>
+</html>
